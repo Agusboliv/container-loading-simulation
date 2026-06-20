@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terminal Baires — Presentación · Simulación DES · Grupo 07</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0A141E; --panel:#0F1C29; --panel2:#0C1722; --line:#1D3142;
+  --ink:#E9EFF3; --muted:#7E94A5; --faint:#54697A;
+  --crane:#F2B23E; --ok:#46C08A; --alarm:#E2543F; --storm:#6FA7D9;
+  --c1:#C4513A; --c2:#D98E2B; --c3:#2E8C7E; --c4:#3A6EA5;
+  --mono:'IBM Plex Mono',ui-monospace,Consolas,monospace;
+  --disp:'Barlow Condensed',Impact,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:
+    radial-gradient(1200px 600px at 78% -10%, #122436 0%, transparent 60%),
+    radial-gradient(900px 500px at 10% 110%, #0B1C2B 0%, transparent 55%),
+    var(--bg);
+  color:var(--ink);font-family:var(--mono);font-size:14px;overflow:hidden;
+}
+/* ---------- progreso superior ---------- */
+#bar{position:fixed;top:0;left:0;height:3px;background:var(--crane);width:0;z-index:50;transition:width .35s ease}
+/* ---------- header ---------- */
+header{
+  position:fixed;top:0;left:0;right:0;height:52px;z-index:40;
+  display:flex;align-items:center;gap:16px;padding:0 22px;
+  border-bottom:1px solid var(--line);background:rgba(10,20,30,.78);backdrop-filter:blur(6px)
+}
+header .brand{font-family:var(--disp);font-weight:700;font-size:21px;letter-spacing:.07em;text-transform:uppercase}
+header .brand span{color:var(--crane)}
+header .crane-ico{flex:0 0 auto}
+header .sec{color:var(--muted);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;border-left:1px solid var(--line);padding-left:16px}
+header .meta{margin-left:auto;display:flex;align-items:center;gap:14px;color:var(--faint);font-size:11px}
+header .meta b{color:var(--muted);font-weight:500}
+#counter{color:var(--crane);font-weight:600}
+/* ---------- stage ---------- */
+#stage{position:absolute;inset:52px 0 56px;display:flex;align-items:center;justify-content:center;padding:26px 30px}
+.slide{
+  position:absolute;width:min(1080px,100%);max-height:100%;overflow:auto;
+  opacity:0;transform:translateY(14px);pointer-events:none;transition:opacity .4s ease,transform .4s ease
+}
+.slide.active{opacity:1;transform:none;pointer-events:auto}
+.kicker{color:var(--crane);font-size:12px;letter-spacing:.22em;text-transform:uppercase;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.kicker::before{content:"";width:22px;height:2px;background:var(--crane);display:inline-block}
+h1.title{font-family:var(--disp);font-weight:700;font-size:clamp(34px,5vw,58px);line-height:.98;letter-spacing:.01em;text-transform:uppercase;margin-bottom:14px}
+h1.title .y{color:var(--crane)}
+h2.head{font-family:var(--disp);font-weight:700;font-size:clamp(28px,4vw,44px);line-height:1;letter-spacing:.02em;text-transform:uppercase;margin-bottom:18px}
+p.lead{color:var(--muted);font-size:15px;line-height:1.6;max-width:74ch}
+.muted{color:var(--muted)} .faint{color:var(--faint)} .cr{color:var(--crane)} .ok{color:var(--ok)} .al{color:var(--alarm)}
+b,strong{color:var(--ink);font-weight:600}
+ul.bullets{list-style:none;margin-top:16px;display:flex;flex-direction:column;gap:12px;max-width:78ch}
+ul.bullets li{position:relative;padding-left:22px;color:var(--muted);font-size:14.5px;line-height:1.55}
+ul.bullets li::before{content:"▸";position:absolute;left:0;color:var(--crane)}
+ul.bullets li b{color:var(--ink)}
+.note{color:var(--faint);font-size:11.5px;line-height:1.55;margin-top:18px;border-top:1px dashed var(--line);padding-top:10px;max-width:84ch}
+.grid{display:grid;gap:14px;margin-top:18px}
+.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:780px){.g2,.g3,.g4{grid-template-columns:1fr 1fr}}
+/* ---------- tarjetas / stats ---------- */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:15px 16px}
+.card h3{font-family:var(--disp);font-size:14px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.card h3::after{content:"";flex:1;height:1px;background:var(--line)}
+.stat{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:13px 14px}
+.stat .tag{font-size:10px;letter-spacing:.14em;color:var(--crane);font-weight:600;text-transform:uppercase}
+.stat .name{font-size:11px;color:var(--muted);line-height:1.3;margin:3px 0 8px;min-height:28px}
+.stat .val{font-family:var(--disp);font-size:34px;font-weight:700;line-height:.9;color:var(--ink)}
+.stat .val small{font-size:14px;color:var(--muted);font-family:var(--mono);font-weight:400;margin-left:4px}
+.stat .delta{font-size:11px;margin-top:6px}
+.delta.dn{color:var(--ok)} .delta.up{color:var(--alarm)} .delta.flat{color:var(--faint)}
+/* ---------- tabla ---------- */
+table.data{width:100%;border-collapse:collapse;margin-top:16px;font-size:13px}
+table.data th,table.data td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right}
+table.data th:first-child,table.data td:first-child{text-align:left;color:var(--muted)}
+table.data thead th{font-family:var(--disp);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600;font-size:12px}
+table.data tbody tr:hover{background:var(--panel)}
+table.data .sc{font-weight:600}
+.dotc1{color:var(--c1)}.dotc2{color:var(--c2)}.dotc3{color:var(--c3)}.dotc4{color:var(--c4)}
+.pill{display:inline-block;padding:2px 8px;border:1px solid var(--line);border-radius:20px;font-size:11px;color:var(--muted)}
+/* ---------- código ---------- */
+code{font-family:var(--mono);color:var(--crane);background:var(--panel2);border:1px solid var(--line);border-radius:3px;padding:1px 5px;font-size:.9em}
+pre.code{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--crane);border-radius:6px;padding:12px 14px;font-family:var(--mono);font-size:12px;line-height:1.65;color:var(--ink);overflow:auto;white-space:pre}
+pre.code .c{color:var(--faint)} pre.code .k{color:var(--crane)} pre.code .s{color:var(--storm)}
+.fn{font-family:var(--mono);color:var(--crane);font-size:13px;font-weight:600;margin-bottom:5px}
+.fn span{color:var(--faint);font-weight:400}
+/* ---------- figuras reales ---------- */
+.fig{display:block;max-width:min(980px,100%);max-height:56vh;width:auto;height:auto;margin:14px auto 0;
+  border:1px solid var(--line);border-radius:8px;background:rgba(12,23,34,.35)}
+.fig.sm{max-width:min(560px,100%);max-height:42vh}
+.cap{color:var(--faint);font-size:11px;text-align:center;margin-top:8px;line-height:1.5}
+table.data.small{font-size:11.5px}
+table.data.small th,table.data.small td{padding:5px 9px}
+/* ---------- chips de números clave ---------- */
+.chips{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:16px}
+.chip{background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:9px 16px;text-align:center;min-width:120px}
+.chip .v{font-family:var(--disp);font-size:26px;font-weight:700;color:var(--ink);line-height:1}
+.chip .v small{font-size:13px;color:var(--muted);font-weight:400}
+.chip .l{font-size:10px;color:var(--muted);letter-spacing:.05em;margin-top:5px;text-transform:uppercase}
+/* ---------- flujo ---------- */
+.flow{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;margin-top:18px}
+.flow .step{flex:1;min-width:92px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:11px 8px;text-align:center;position:relative}
+.flow .step .n{font-size:10px;color:var(--crane);letter-spacing:.1em}
+.flow .step .t{font-family:var(--disp);font-size:15px;letter-spacing:.06em;text-transform:uppercase;margin-top:3px}
+.flow .arrow{display:flex;align-items:center;color:var(--faint);padding:0 4px;font-size:16px}
+@media(max-width:780px){.flow .arrow{display:none}.flow .step{min-width:44%}}
+/* ---------- checklist anclas ---------- */
+.checks{display:flex;flex-direction:column;gap:9px;margin-top:6px}
+.checkrow{display:flex;align-items:center;gap:12px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:10px 13px}
+.checkrow .ico{color:var(--ok);font-weight:700;flex:0 0 auto}
+.checkrow .txt{color:var(--muted);font-size:13px;flex:1}
+.checkrow .v{font-family:var(--disp);font-size:18px;font-weight:600;color:var(--ink)}
+.checkrow .tgt{color:var(--faint);font-size:11px;margin-left:6px}
+/* ---------- CTA final ---------- */
+.cta-wrap{text-align:center;margin-top:8px}
+a.cta{
+  display:inline-flex;align-items:center;gap:14px;margin-top:20px;
+  font-family:var(--disp);font-size:24px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:#0A141E;background:var(--crane);text-decoration:none;padding:16px 34px;border-radius:7px;
+  box-shadow:0 0 0 1px var(--crane),0 14px 40px -16px var(--crane);transition:transform .15s ease,filter .15s ease
+}
+a.cta:hover{transform:translateY(-2px);filter:brightness(1.07)}
+a.cta .play{font-size:16px}
+.links{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:26px}
+.links a{color:var(--muted);text-decoration:none;border:1px solid var(--line);border-radius:6px;padding:9px 15px;font-size:12px;letter-spacing:.04em;transition:border-color .15s,color .15s}
+.links a:hover{border-color:var(--crane);color:var(--ink)}
+.links a b{color:var(--crane);font-weight:600;margin-right:6px}
+/* ---------- footer nav ---------- */
+footer{
+  position:fixed;bottom:0;left:0;right:0;height:56px;z-index:40;
+  display:flex;align-items:center;gap:16px;padding:0 22px;
+  border-top:1px solid var(--line);background:rgba(10,20,30,.78);backdrop-filter:blur(6px)
+}
+.navbtn{
+  font-family:var(--disp);font-size:14px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;
+  background:var(--panel2);border:1px solid var(--line);color:var(--ink);padding:9px 16px;border-radius:5px;cursor:pointer;transition:border-color .15s,color .15s
+}
+.navbtn:hover{border-color:var(--crane);color:var(--crane)}
+.navbtn:disabled{opacity:.35;cursor:default;border-color:var(--line);color:var(--faint)}
+.dots{display:flex;gap:7px;margin:0 auto;flex-wrap:wrap;justify-content:center}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--line);border:0;cursor:pointer;padding:0;transition:background .2s,transform .2s}
+.dot.on{background:var(--crane);transform:scale(1.25)}
+.hint{color:var(--faint);font-size:10.5px;letter-spacing:.05em}
+.hint kbd{font-family:var(--mono);background:var(--panel2);border:1px solid var(--line);border-radius:3px;padding:1px 5px;color:var(--muted)}
+/* cover SVG skyline */
+.skyline{margin-top:24px;width:100%;max-width:760px;opacity:.9}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+
+<header>
+  <svg class="crane-ico" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M4 21h16M6 21V6l13-2v3M6 6l13-2M6 9h13M9 9v4m0 0H6m3 0 3 3" stroke="#F2B23E" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <div class="brand">Terminal <span>Baires</span></div>
+  <div class="sec" id="section">Portada</div>
+  <div class="meta">
+    <span><b>Simulación DES</b> · SimPy</span>
+    <span class="hide-sm"><b>Grupo 07</b> · 2026 c1</span>
+    <span id="counter">1 / 15</span>
+  </div>
+</header>
+
+<div id="stage">
+
+  <!-- 1 · PORTADA -->
+  <section class="slide active" data-section="Portada">
+    <div class="kicker">Procesos Estocásticos y Simulación · 2026 c1</div>
+    <h1 class="title">Terminal <span class="y">Baires</span><br>Simulación de eventos discretos</h1>
+    <p class="lead">Evaluamos por simulación tres decisiones de gestión del puerto: incorporar una <b>segunda grúa</b>, aplicar una <b>tarifa diferencial</b> por medio-contenedor, e implementar un <b>mantenimiento preventivo</b> de la grúa.</p>
+    <div class="grid g3" style="margin-top:22px">
+      <div class="stat"><div class="tag">VD1</div><div class="name">¿Conviene una segunda grúa?</div><div class="val">2ª grúa</div></div>
+      <div class="stat"><div class="tag">VD2</div><div class="name">¿Tarifa diferencial por medio-contenedor?</div><div class="val">Tarifa</div></div>
+      <div class="stat"><div class="tag">VD3</div><div class="name">¿Mantenimiento preventivo de la grúa?</div><div class="val">Mant.</div></div>
+    </div>
+    <svg class="skyline" viewBox="0 0 760 90" fill="none" aria-hidden="true">
+      <line x1="0" y1="80" x2="760" y2="80" stroke="#1D3142" stroke-width="1.5"/>
+      <g stroke="#2E8C7E" stroke-width="1.4"><rect x="40" y="60" width="26" height="20"/><rect x="70" y="64" width="26" height="16"/><rect x="100" y="58" width="26" height="22"/></g>
+      <g stroke="#F2B23E" stroke-width="1.5" stroke-linecap="round">
+        <path d="M210 80V36l54-7v9M210 36l54-7M224 36v10m0 0h-14m14 0 10 10"/>
+        <path d="M470 80V40l54-7v9M470 40l54-7M484 40v10m0 0h-14m14 0 10 10"/>
+      </g>
+      <g fill="#3A6EA5" opacity=".8"><rect x="300" y="66" width="60" height="14"/><rect x="312" y="60" width="36" height="6"/></g>
+      <g fill="#C4513A" opacity=".75"><rect x="560" y="68" width="44" height="12"/><rect x="606" y="68" width="44" height="12"/></g>
+    </svg>
+    <p class="note"><b>Integrantes:</b> Bolívar, Agustín · Martínez Folica, Nazareno &nbsp;—&nbsp; El notebook (SimPy) es el motor de análisis; el simulador animado, al final, muestra el modelo en vivo.</p>
+  </section>
+
+  <!-- 2 · INTRODUCCIÓN -->
+  <section class="slide" data-section="Introducción">
+    <div class="kicker">Introducción · el caso</div>
+    <h2 class="head">El puerto y las tres preguntas</h2>
+    <p class="lead"><b>TERMINAL BAIRES</b> (La Plata) opera un solo <b>muelle</b> y una sola <b>grúa</b>, 24/7 con práctico permanente. Recibe ~<b>10 barcos/mes</b>; ~20% de la carga son medio-contenedores; la grúa pierde ~<b>15%</b> del tiempo operativo por fallas; y el clima adverso frena toda la operación.</p>
+    <div class="card" style="margin-top:18px">
+      <div class="fn">El administrador necesita decidir</div>
+      <ul class="bullets" style="margin-top:8px">
+        <li><b style="color:var(--c3)">VD1 ·</b> ¿Incorporar una <b>segunda grúa</b> para operar cada barco con dos?</li>
+        <li><b class="cr">VD2 ·</b> ¿La proporción creciente de <b>medio-contenedores</b> justifica una tarifa diferencial?</li>
+        <li><b style="color:var(--c4)">VD3 ·</b> ¿Un <b>mantenimiento preventivo</b> mejora la disponibilidad de la grúa?</li>
+      </ul>
+    </div>
+    <p class="note">Son las tres <b>variables de decisión</b> (VD) — las "palancas" del sistema. La simulación mide su efecto sobre el desempeño del puerto.</p>
+  </section>
+
+  <!-- 3 · OBJETIVO E HIPÓTESIS -->
+  <section class="slide" data-section="Objetivo e hipótesis">
+    <div class="kicker">Objetivo e hipótesis</div>
+    <h2 class="head">Qué buscamos decidir</h2>
+    <p class="lead"><b>Objetivo:</b> evaluar por simulación de eventos discretos si conviene la segunda grúa, si los medio-contenedores justifican una tarifa, y si el mantenimiento preventivo mejora la disponibilidad — para una decisión de gestión informada.</p>
+    <div class="kicker" style="margin-top:24px">Hipótesis de partida</div>
+    <div class="grid g3" style="margin-top:8px">
+      <div class="stat"><div class="tag">H1 · VD1</div><div class="name" style="min-height:54px">La segunda grúa hace falta para descongestionar y subir el throughput.</div></div>
+      <div class="stat"><div class="tag">H2 · VD2</div><div class="name" style="min-height:54px">El medio-contenedor cuesta más y un recargo es justificable.</div></div>
+      <div class="stat"><div class="tag">H3 · VD3</div><div class="name" style="min-height:54px">El mantenimiento preventivo mejora la disponibilidad de la grúa.</div></div>
+    </div>
+    <p class="note">La simulación va a <b class="ok">confirmar</b> dos de estas hipótesis… y <b class="al">dar vuelta</b> una: spoiler — el puerto no tiene un problema de capacidad.</p>
+  </section>
+
+  <!-- 4 · VARIABLES DEL MODELO -->
+  <section class="slide" data-section="Variables del modelo">
+    <div class="kicker">Marco del estudio</div>
+    <h2 class="head">Qué decidimos y qué medimos</h2>
+    <div class="grid g2" style="margin-top:8px;align-items:start">
+      <div class="card" style="border-color:var(--crane)">
+        <div class="fn">Variables de decisión (VD) · las palancas</div>
+        <ul class="bullets" style="margin-top:8px">
+          <li><b style="color:var(--c3)">VD1</b> — Cantidad de grúas (1 o 2)</li>
+          <li><b class="cr">VD2</b> — Tarifa diferencial por medio-contenedor</li>
+          <li><b style="color:var(--c4)">VD3</b> — Política de mantenimiento de la grúa</li>
+        </ul>
+        <p class="muted" style="font-size:11.5px;margin-top:12px;line-height:1.5">Lo que el administrador puede cambiar → definen los 4 escenarios (Base · A · B · C).</p>
+      </div>
+      <div class="card">
+        <div class="fn">Variables de referencia (VR) · los indicadores</div>
+        <table class="data small" style="margin-top:4px">
+          <tbody>
+            <tr><td class="cr sc">VR1</td><td>Espera en el antepuerto (h)</td></tr>
+            <tr><td class="cr sc">VR2</td><td>Estadía total del barco (h)</td></tr>
+            <tr><td class="cr sc">VR3</td><td>Utilización de la grúa</td></tr>
+            <tr><td class="cr sc">VR4</td><td>Throughput (barcos y cont. / mes)</td></tr>
+            <tr><td class="cr sc">VR5</td><td>Barcos en cola (promedio y máximo)</td></tr>
+            <tr><td class="cr sc">VR6</td><td>Tiempo perdido por fallas (h/año)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="note"><b>VD = entradas</b> (las decisiones que evaluamos) · <b>VR = salidas</b> (cómo medimos el desempeño de cada escenario). La simulación conecta las palancas con los indicadores.</p>
+  </section>
+
+  <!-- 5 · EL PROCESO -->
+  <section class="slide" data-section="El proceso">
+    <div class="kicker">Modelo conceptual · diagrama de proceso</div>
+    <h2 class="head">El recorrido de un barco</h2>
+    <svg viewBox="0 0 1120 400" style="width:100%;height:auto;max-height:60vh;margin-top:6px" font-family="'IBM Plex Mono',monospace" aria-label="Diagrama de proceso del modelo">
+      <defs>
+        <marker id="ah" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#7E94A5"/></marker>
+        <marker id="ahs" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#6FA7D9"/></marker>
+        <marker id="aha" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#E2543F"/></marker>
+      </defs>
+      <!-- entrada -->
+      <rect x="6" y="20" width="120" height="48" rx="6" fill="#0F1C29" stroke="#1D3142"/>
+      <text x="66" y="42" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-weight="700" font-size="15" fill="#E9EFF3">BARCO LLEGA</text>
+      <text x="66" y="58" text-anchor="middle" font-size="10" fill="#7E94A5">~10 / mes</text>
+      <line x1="126" y1="44" x2="150" y2="44" stroke="#7E94A5" stroke-width="1.4" marker-end="url(#ah)"/>
+      <rect x="152" y="20" width="170" height="48" rx="6" fill="#0F1C29" stroke="#1D3142"/>
+      <text x="237" y="42" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-weight="700" font-size="15" fill="#E9EFF3">ANTEPUERTO</text>
+      <text x="237" y="58" text-anchor="middle" font-size="10" fill="#7E94A5">cola · FCFS</text>
+      <line x1="322" y1="44" x2="346" y2="44" stroke="#7E94A5" stroke-width="1.4" marker-end="url(#ah)"/>
+      <rect x="348" y="20" width="176" height="48" rx="6" fill="#0F1C29" stroke="#1D3142"/>
+      <text x="436" y="40" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-weight="700" font-size="14" fill="#E9EFF3">¿MUELLE LIBRE?</text>
+      <text x="436" y="57" text-anchor="middle" font-size="10" fill="#7E94A5">¿clima apto?</text>
+      <path d="M436,68 L436,108" stroke="#7E94A5" stroke-width="1.4" fill="none" marker-end="url(#ah)"/>
+      <!-- recurso muelle -->
+      <rect x="58" y="110" width="946" height="170" rx="12" fill="#0B1925" stroke="#F2B23E" stroke-width="1.4"/>
+      <text x="76" y="132" font-size="11" fill="#7E94A5" letter-spacing="1">RECURSO · MUELLE — ocupado durante todo el trámite</text>
+      <!-- pasos -->
+      <rect x="78" y="148" width="200" height="100" rx="6" fill="#0F1C29" stroke="#1D3142"/>
+      <text x="178" y="174" text-anchor="middle" font-size="10" fill="#7E94A5" letter-spacing="1.2">PRÁCTICO</text>
+      <text x="178" y="204" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-weight="700" font-size="20" fill="#E9EFF3">AMARRE</text>
+      <line x1="278" y1="198" x2="302" y2="198" stroke="#7E94A5" stroke-width="1.4" marker-end="url(#ah)"/>
+      <rect x="304" y="148" width="206" height="100" rx="6" fill="#0F1C29" stroke="#3A6EA5"/>
+      <text x="407" y="172" text-anchor="middle" font-size="10" fill="#F2B23E" letter-spacing="1.2">GRÚA</text>
+      <text x="407" y="198" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-weight="700" font-size="20" fill="#E9EFF3">DESCARGA</text>
+      <text x="407" y="222" text-anchor="middle" font-size="9.5" fill="#7E94A5">5–10 cont · 20% medios</text>
+      <line x1="510" y1="198" x2="534" y2="198" stroke="#7E94A5" stroke-width="1.4" marker-end="url(#ah)"/>
+      <rect x="536" y="148" width="206" height="100" rx="6" fill="#0F1C29" stroke="#3A6EA5"/>
+      <text x="639" y="172" text-anchor="middle" font-size="10" fill="#F2B23E" letter-spacing="1.2">GRÚA</text>
+      <text x="639" y="198" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-weight="700" font-size="20" fill="#E9EFF3">CARGA</text>
+      <text x="639" y="222" text-anchor="middle" font-size="9.5" fill="#7E94A5">10–15 cont · 20% medios</text>
+      <line x1="742" y1="198" x2="766" y2="198" stroke="#7E94A5" stroke-width="1.4" marker-end="url(#ah)"/>
+      <rect x="768" y="148" width="216" height="100" rx="6" fill="#0F1C29" stroke="#1D3142"/>
+      <text x="876" y="174" text-anchor="middle" font-size="10" fill="#7E94A5" letter-spacing="1.2">PRÁCTICO</text>
+      <text x="876" y="204" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-weight="700" font-size="20" fill="#E9EFF3">DESAMARRE</text>
+      <!-- salida -->
+      <path d="M1004,198 L1028,198" stroke="#7E94A5" stroke-width="1.4" fill="none" marker-end="url(#ah)"/>
+      <rect x="1030" y="174" width="86" height="48" rx="6" fill="#0F1C29" stroke="#46C08A"/>
+      <text x="1073" y="194" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-weight="700" font-size="13" fill="#E9EFF3">BARCO</text>
+      <text x="1073" y="210" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-weight="700" font-size="13" fill="#E9EFF3">PARTE</text>
+      <!-- eventos globales -->
+      <rect x="150" y="320" width="300" height="54" rx="6" fill="#0F1C29" stroke="#6FA7D9"/>
+      <text x="300" y="344" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-weight="700" font-size="15" fill="#6FA7D9">⛈ CLIMA ADVERSO</text>
+      <text x="300" y="362" text-anchor="middle" font-size="10" fill="#7E94A5">suspende toda la operación del puerto</text>
+      <path d="M300,320 L300,284" stroke="#6FA7D9" stroke-width="1.3" stroke-dasharray="4 4" fill="none" marker-end="url(#ahs)"/>
+      <rect x="560" y="320" width="340" height="54" rx="6" fill="#0F1C29" stroke="#E2543F"/>
+      <text x="730" y="344" text-anchor="middle" font-family="'Barlow Condensed',sans-serif" font-weight="700" font-size="15" fill="#E2543F">⚠ FALLA DE GRÚA</text>
+      <text x="730" y="362" text-anchor="middle" font-size="10" fill="#7E94A5">interrumpe la grúa · reloj en minutos operativos</text>
+      <path d="M639,320 L639,250" stroke="#E2543F" stroke-width="1.3" stroke-dasharray="4 4" fill="none" marker-end="url(#aha)"/>
+    </svg>
+    <p class="note">El barco toma el <b>muelle</b> (único, FCFS) durante todo el trámite. Dos procesos globales lo interrumpen: el <b style="color:var(--storm)">clima</b> frena todo; la <b style="color:var(--crane)">falla</b> detiene sólo la grúa (en minutos operativos) → por eso ~15% del tiempo operativo es indisponibilidad.</p>
+  </section>
+
+  <!-- 6 · MODELO CONCEPTUAL -->
+  <section class="slide" data-section="Modelo conceptual">
+    <div class="kicker">Modelo conceptual · representación</div>
+    <h2 class="head">Cómo lo representamos</h2>
+    <div class="grid g2">
+      <div class="card"><div class="fn">Entidad · el barco</div>
+        <ul class="bullets" style="margin-top:6px">
+          <li>Tamaño <b>Chico/Mediano/Grande</b> (afecta el amarre)</li>
+          <li>Contenedores a descargar <b>U(5,10)</b> y a cargar <b>U(10,15)</b></li>
+          <li>Cada contenedor: <b>medio</b> con probabilidad ≈0,20</li>
+        </ul>
+      </div>
+      <div class="card"><div class="fn">Recursos</div>
+        <ul class="bullets" style="margin-top:6px">
+          <li><b>Muelle</b> — capacidad 1, FCFS (la restricción real)</li>
+          <li><b>Grúa(s)</b> — 1 o 2; con dos trabajan el <b>mismo barco en paralelo</b> (round-robin), con fallas independientes</li>
+          <li><b>Práctico</b> — ilimitado → demora pura, sin contención</li>
+        </ul>
+      </div>
+    </div>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card" style="border-color:var(--ok)"><div class="fn" style="color:var(--ok)">Qué SÍ modelamos</div><p class="muted" style="font-size:12px;line-height:1.5">Llegadas, cola FCFS, amarre/desamarre por tamaño, descarga y carga, clima, fallas, y la distinción contenedor / medio-contenedor.</p></div>
+      <div class="card" style="border-color:var(--faint)"><div class="fn" style="color:var(--faint)">Qué NO modelamos</div><p class="muted" style="font-size:12px;line-height:1.5">Logística terrestre (camiones, depósito), los trabajadores individuales, ni el detalle físico de la reparación (sólo su duración).</p></div>
+    </div>
+  </section>
+
+  <!-- 7 · CÓMO LO ARMAMOS · MOTOR -->
+  <section class="slide" data-section="Cómo lo armamos">
+    <div class="kicker">Metodología · cómo lo armamos</div>
+    <h2 class="head">El motor, en SimPy</h2>
+    <p class="lead">Implementado en <b>Python + SimPy</b>. El núcleo (<code>crane_work</code>) sirve "minutos-grúa" y, en el mismo bucle, resuelve las pausas por clima y las interrupciones por falla.</p>
+    <div class="grid g2" style="margin-top:14px;align-items:start">
+      <pre class="code"><span class="c"># crane_work — sirve la carga de una grúa</span>
+<span class="k">while</span> queda_trabajo:
+    <span class="k">while</span> not clima_ok:          <span class="c"># ⛈ pausa</span>
+        <span class="k">yield</span> clima_despejado
+    <span class="k">yield</span> timeout(trabajo) | timeout(ttf) | clima_corte
+    <span class="k">if</span> ttf &lt;= 0:                 <span class="c"># ⚠ falla (min op.)</span>
+        <span class="k">yield</span> timeout(MTTR())      <span class="c"># reparación</span>
+        ttf = MTBF()              <span class="c"># próxima falla</span></pre>
+      <div style="display:flex;flex-direction:column;gap:9px">
+        <div class="card" style="padding:11px 13px"><div class="fn">Streams(seed)</div><p class="muted" style="font-size:12px;line-height:1.45">5 RNG independientes (arr · ship · svc · fail · wx) → habilita <b class="cr">CRN</b>.</p></div>
+        <div class="card" style="padding:11px 13px"><div class="fn">weather_proc</div><p class="muted" style="font-size:12px;line-height:1.45">Clima como eventos: Exp(gap) + Uniforme(duración). Suspende toda la operación.</p></div>
+        <div class="card" style="padding:11px 13px"><div class="fn">ship_proc</div><p class="muted" style="font-size:12px;line-height:1.45">Muelle cap.1 FCFS → amarre → grúas round-robin → desamarre.</p></div>
+        <div class="card" style="padding:11px 13px"><div class="fn">run_one</div><p class="muted" style="font-size:12px;line-height:1.45">12 meses + 1 de warm-up (snapshot) → devuelve VR1…VR6.</p></div>
+      </div>
+    </div>
+    <p class="note">Nada de <code>random</code> global: todo sale de los <code>Streams</code> sembrados → <b>reproducible</b> (misma semilla → mismo resultado) y habilita las comparaciones pareadas por CRN.</p>
+  </section>
+
+  <!-- 8 · DATOS Y DISTRIBUCIONES -->
+  <section class="slide" data-section="Datos y distribuciones">
+    <div class="kicker">Cómo lo medimos · datos</div>
+    <h2 class="head">De datos crudos a distribuciones</h2>
+    <p class="lead">2000 operaciones de grúa, 300 amarres, 150 fallas y 50 eventos de clima → cada variable se ajusta a una distribución por bondad de ajuste (Kolmogórov–Smirnov).</p>
+    <img class="fig" src="assets/fig_input.png" alt="Ajuste de distribuciones por KS">
+    <p class="cap">Histograma de datos + densidad ajustada (línea ámbar). Exponencial · Triangular · Normal · LogNormal · Uniforme — la elegida es la de menor estadístico KS.</p>
+    <p class="note"><b>Criterio honesto:</b> no se descartan las colas largas de las exponenciales (no son outliers); el KS se usa como criterio comparativo entre candidatas.</p>
+  </section>
+
+  <!-- 9 · VALIDACIÓN Y RIGOR -->
+  <section class="slide" data-section="Validación y rigor">
+    <div class="kicker">Cómo lo medimos · confianza</div>
+    <h2 class="head">Por qué confiar en el modelo</h2>
+    <div class="grid g2" style="align-items:start;margin-top:2px">
+      <div>
+        <p class="muted" style="font-size:12px;margin-bottom:8px">El simulador <b>reproduce las anclas conocidas</b> del sistema (corrida de control):</p>
+        <div class="checks">
+          <div class="checkrow"><span class="ico">✓</span><span class="txt">Indisponibilidad de grúa</span><span class="v">14,7%</span><span class="tgt">≈15%</span></div>
+          <div class="checkrow"><span class="ico">✓</span><span class="txt">Barcos / mes</span><span class="v">9,8</span><span class="tgt">≈10</span></div>
+          <div class="checkrow"><span class="ico">✓</span><span class="txt">MTBF / MTTR (min)</span><span class="v">1044 / 181</span><span class="tgt">1034 / 180</span></div>
+          <div class="checkrow"><span class="ico">✓</span><span class="txt">Medios · clima adverso</span><span class="v">19% · 3,6%</span><span class="tgt">20% · 3,6%</span></div>
+        </div>
+      </div>
+      <div>
+        <p class="muted" style="font-size:12px;margin-bottom:8px">Calidad estadística del experimento:</p>
+        <div class="chips" style="justify-content:flex-start;margin-top:0">
+          <div class="chip" style="min-width:104px"><div class="v">30</div><div class="l">réplicas · 12 m</div></div>
+          <div class="chip" style="min-width:104px"><div class="v">1<small> mes</small></div><div class="l">warm-up</div></div>
+          <div class="chip" style="min-width:104px"><div class="v">95<small>%</small></div><div class="l">IC</div></div>
+        </div>
+        <p class="muted" style="font-size:12px;line-height:1.55;margin-top:12px"><b class="cr">CRN:</b> los 4 escenarios corren con las mismas semillas → la diferencia es por la <b>política</b>, no por el azar. El <b>warm-up</b> (1 mes) se descarta antes de medir.</p>
+      </div>
+    </div>
+    <img class="fig" src="assets/fig_warmup.png" alt="Período de warm-up en las series temporales" style="max-height:40vh">
+    <p class="cap">Series de una réplica representativa: la franja ámbar es el warm-up descartado; a partir de ahí el sistema está en régimen.</p>
+  </section>
+
+  <!-- 10 · RESULTADOS -->
+  <section class="slide" data-section="Resultados">
+    <div class="kicker">Resultados</div>
+    <h2 class="head">El puerto está sobredimensionado</h2>
+    <p class="lead" style="font-size:13px">Medimos 6 <b>variables de referencia</b> — VR1 espera · VR2 estadía · VR3 utilización · VR4 throughput · VR5 cola · VR6 perdido por fallas — en 4 escenarios: <span class="dotc1">●</span>Base · <span class="dotc3">●</span>A (2 grúas) · <span class="dotc4">●</span>B (mant.) · <span class="dotc2">●</span>C (combinado).</p>
+    <img class="fig" src="assets/fig_bars.png" alt="Comparación de escenarios con IC95">
+    <div class="chips">
+      <div class="chip"><div class="v">~7<small>%</small></div><div class="l">utilización de grúa</div></div>
+      <div class="chip"><div class="v">~0</div><div class="l">cola en antepuerto</div></div>
+      <div class="chip"><div class="v">9,7</div><div class="l">barcos/mes</div></div>
+      <div class="chip"><div class="v">&lt;1<small> h</small></div><div class="l">espera media</div></div>
+    </div>
+    <p class="note"><b>Lectura clave:</b> utilización ~<b>7%</b> y cola <b>~0</b> → el cuello de botella <b>no</b> es la capacidad. Esto <b class="al">da vuelta la hipótesis H1</b> y cambia el sentido de las tres decisiones.</p>
+  </section>
+
+  <!-- 11 · VD1 -->
+  <section class="slide" data-section="VD1 · Segunda grúa">
+    <div class="kicker">Decisión 1 · resultado</div>
+    <h2 class="head">¿Conviene la segunda grúa?</h2>
+    <img class="fig" src="assets/fig_stress.png" alt="Estadía y cola vs demanda — stress test">
+    <div class="chips">
+      <div class="chip"><div class="v">−36<small>%</small></div><div class="l">estadía 1→2 grúas</div></div>
+      <div class="chip"><div class="v">~0</div><div class="l">congestión a 10/mes</div></div>
+      <div class="chip"><div class="v">5×</div><div class="l">demanda sin congestionar (1 grúa)</div></div>
+    </div>
+    <p class="note"><b>Conclusión:</b> la 2ª grúa no resuelve congestión (no la hay); reduce la <b>estadía</b> por paralelizar (<span class="dotc1">●</span> 1 grúa, <span class="dotc3">●</span> 2 grúas). Aun a 5× la demanda el puerto sigue holgado con una sola. Se justifica <b>sólo si el turnaround más rápido tiene valor comercial</b>, no como capacidad.</p>
+  </section>
+
+  <!-- 12 · VD2 -->
+  <section class="slide" data-section="VD2 · Tarifa">
+    <div class="kicker">Decisión 2 · resultado</div>
+    <h2 class="head">Tarifa por medio-contenedor</h2>
+    <p class="lead">Un medio-contenedor consume más tiempo de grúa que uno lleno. El simulador <b>mide</b> ese sobrecosto (tiempo real del medio menos el esperado de un lleno) — no la diferencia de modas, que lo sobreestimaría.</p>
+    <div class="grid g3" style="margin-top:16px">
+      <div class="stat"><div class="tag">Sobrecosto</div><div class="name">por medio vs lleno</div><div class="val">+17,7<small>%</small></div><div class="delta up">~2,8 min extra</div></div>
+      <div class="stat"><div class="tag">Volumen</div><div class="name">medios movidos / año</div><div class="val">469</div></div>
+      <div class="stat"><div class="tag">Tiempo grúa</div><div class="name">extra/año por medios</div><div class="val">21,5 <small>h</small></div></div>
+    </div>
+    <div class="card" style="margin-top:16px"><div class="fn">Base tarifaria</div>
+      <p class="muted" style="font-size:14px;line-height:1.6">El recargo por medio-contenedor debería cubrir <b>~2,8 min</b> adicionales de grúa por pieza. Con costo horario de grúa <b>C</b> ($/h), el recargo sugerido por medio ≈ <b class="cr">C × 0,046</b> (más prorrateo de fallas/ociosidad).</p>
+    </div>
+    <p class="note"><b>Conclusión:</b> el sobrecosto es real, cuantificable y <b>trazable a los datos</b>. Un recargo proporcional es justificable; además desincentiva el formato más costoso de operar. <b class="ok">Confirma H2.</b></p>
+  </section>
+
+  <!-- 13 · VD3 -->
+  <section class="slide" data-section="VD3 · Mantenimiento">
+    <div class="kicker">Decisión 3 · resultado</div>
+    <h2 class="head">Mantenimiento preventivo</h2>
+    <div class="grid g2" style="align-items:center;margin-top:6px">
+      <div>
+        <div class="grid g2">
+          <div class="stat"><div class="tag">VR6 fallas</div><div class="name">tiempo perdido / año</div><div class="val">−72<small>%</small></div><div class="delta dn">110 h → 31 h</div></div>
+          <div class="stat"><div class="tag">VR2 estadía</div><div class="name">mejora secundaria</div><div class="val">−9<small>%</small></div><div class="delta dn">8,6 h → 7,8 h</div></div>
+        </div>
+        <p class="note" style="margin-top:14px">Supuesto declarado: <b>MTBF×2,5</b> y <b>MTTR×0,7</b>. Conviene rehacerlo con datos del proveedor si se consiguen.</p>
+      </div>
+      <div>
+        <img class="fig sm" src="assets/fig_vr6.png" alt="VR6 por escenario" style="margin:0 auto">
+        <p class="cap">Sólo el mantenimiento (<span class="dotc4">●</span>B, <span class="dotc2">●</span>C) recorta la indisponibilidad; la 2ª grúa sola (<span class="dotc3">●</span>A) no.</p>
+      </div>
+    </div>
+    <p class="note"><b>Conclusión:</b> ataca directamente la VR6 — la palanca <b>más barata y de mayor impacto sobre la disponibilidad</b>. Prioritaria por sobre una segunda grúa. <b class="ok">Confirma H3.</b></p>
+  </section>
+
+  <!-- 14 · CONCLUSIONES -->
+  <section class="slide" data-section="Conclusiones">
+    <div class="kicker">Síntesis</div>
+    <h2 class="head">Conclusiones y recomendación</h2>
+    <ul class="bullets" style="margin-top:4px">
+      <li><b class="al">H1 — refutada:</b> el puerto está holgado; la 2ª grúa no resuelve capacidad, sólo acelera el turnaround (−36% estadía).</li>
+      <li><b class="ok">H2 — confirmada:</b> el medio cuesta +17,7% de grúa; la tarifa es trazable a los datos.</li>
+      <li><b class="ok">H3 — confirmada:</b> el mantenimiento recorta −72% el tiempo perdido por fallas.</li>
+    </ul>
+    <div class="grid g3" style="margin-top:18px">
+      <div class="card" style="border-color:var(--ok)"><div class="fn" style="color:var(--ok)">1 · Priorizar</div><div style="font-family:var(--disp);font-size:24px;font-weight:700;line-height:1">Mantenimiento</div><p class="muted" style="font-size:12px;margin-top:7px;line-height:1.5">Mayor relación impacto/costo sobre la disponibilidad.</p></div>
+      <div class="card" style="border-color:var(--crane)"><div class="fn">2 · Aplicar</div><div style="font-family:var(--disp);font-size:24px;font-weight:700;line-height:1">Tarifa diferencial</div><p class="muted" style="font-size:12px;margin-top:7px;line-height:1.5">Recargo ≈ C × 0,046 por medio-contenedor.</p></div>
+      <div class="card" style="border-color:var(--faint)"><div class="fn" style="color:var(--faint)">3 · Diferir</div><div style="font-family:var(--disp);font-size:24px;font-weight:700;line-height:1;color:var(--faint)">Segunda grúa</div><p class="muted" style="font-size:12px;margin-top:7px;line-height:1.5">Sólo si el turnaround tiene valor comercial.</p></div>
+    </div>
+    <p class="note"><b>En una línea:</b> el cuello de botella no es la capacidad sino la <b>disponibilidad</b> de la grúa. Mantenimiento + tarifa resuelven más, por menos, que una segunda grúa.</p>
+  </section>
+
+  <!-- 15 · DEMO -->
+  <section class="slide" data-section="Simulación en vivo">
+    <div class="cta-wrap">
+      <div class="kicker" style="justify-content:center">Demostración</div>
+      <h2 class="head">Veamos el modelo en acción</h2>
+      <p class="lead" style="margin:0 auto">El simulador animado corre el puerto en tiempo real: barcos, grúas, clima y fallas, con el tablero de variables de referencia en vivo. Mismo modelo, misma calibración.</p>
+      <a class="cta" id="demo-link" href="Simulacion_html/terminal_baires_sim.html">
+        <span class="play">▶</span> Ver simulación en vivo
+      </a>
+      <div class="links">
+        <a id="repo-link" href="#"><b>GitHub</b>repositorio del proyecto</a>
+        <a href="#" id="back-link"><b>↺</b>volver a la portada</a>
+      </div>
+      <p class="note" style="text-align:left;display:inline-block;margin-top:30px">El botón abre <code>Simulacion_html/terminal_baires_sim.html</code> (ruta relativa). Funciona igual en local y en GitHub Pages. Las conclusiones del informe se sostienen sobre el notebook; la animación es la maqueta de presentación.</p>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <button class="navbtn" id="prev">‹ Anterior</button>
+  <div class="dots" id="dots"></div>
+  <button class="navbtn" id="next">Siguiente ›</button>
+  <span class="hint hide-sm">&nbsp;<kbd>←</kbd> <kbd>→</kbd> navegar · <kbd>F</kbd> pantalla completa</span>
+</footer>
+
+<script>
+(function(){
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const N = slides.length;
+  let i = 0;
+  const bar = document.getElementById('bar');
+  const counter = document.getElementById('counter');
+  const section = document.getElementById('section');
+  const dotsWrap = document.getElementById('dots');
+  const prev = document.getElementById('prev');
+  const next = document.getElementById('next');
+
+  // dots
+  slides.forEach((_,k)=>{
+    const b=document.createElement('button');
+    b.className='dot'; b.setAttribute('aria-label','Ir a slide '+(k+1));
+    b.addEventListener('click',()=>show(k));
+    dotsWrap.appendChild(b);
+  });
+  const dots = Array.from(dotsWrap.children);
+
+  function show(n){
+    i = Math.max(0, Math.min(N-1, n));
+    slides.forEach((s,k)=>s.classList.toggle('active', k===i));
+    dots.forEach((d,k)=>d.classList.toggle('on', k===i));
+    counter.textContent = (i+1)+' / '+N;
+    section.textContent = slides[i].dataset.section || '';
+    bar.style.width = (N>1 ? (i/(N-1)*100) : 100)+'%';
+    prev.disabled = (i===0);
+    next.disabled = (i===N-1);
+    if (slides[i].scrollTop) slides[i].scrollTop = 0;
+  }
+  prev.addEventListener('click',()=>show(i-1));
+  next.addEventListener('click',()=>show(i+1));
+
+  document.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '){ show(i+1); e.preventDefault(); }
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){ show(i-1); e.preventDefault(); }
+    else if(e.key==='Home'){ show(0); e.preventDefault(); }
+    else if(e.key==='End'){ show(N-1); e.preventDefault(); }
+    else if(e.key==='f'||e.key==='F'){
+      if(!document.fullscreenElement){ document.documentElement.requestFullscreen?.(); }
+      else { document.exitFullscreen?.(); }
+    }
+  });
+
+  // touch / swipe
+  let x0=null;
+  document.addEventListener('touchstart',e=>{ x0=e.touches[0].clientX; },{passive:true});
+  document.addEventListener('touchend',e=>{
+    if(x0===null) return;
+    const dx=e.changedTouches[0].clientX - x0;
+    if(Math.abs(dx)>50){ show(i + (dx<0?1:-1)); }
+    x0=null;
+  },{passive:true});
+
+  // back to cover
+  document.getElementById('back-link').addEventListener('click',e=>{ e.preventDefault(); show(0); });
+
+  // === Enlace al repositorio ===
+  const REPO_URL = "https://github.com/Agusboliv/container-loading-simulation";
+  document.getElementById('repo-link').href = REPO_URL;
+
+  show(0);
+})();
+</script>
+</body>
+</html>
