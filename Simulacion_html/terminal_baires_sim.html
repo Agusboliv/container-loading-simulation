@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terminal Baires — Simulación operativa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0A141E; --panel:#0F1C29; --panel2:#0C1722; --line:#1D3142;
+  --ink:#E9EFF3; --muted:#7E94A5; --faint:#54697A;
+  --crane:#F2B23E; --ok:#46C08A; --alarm:#E2543F; --storm:#6FA7D9;
+  --c1:#C4513A; --c2:#D98E2B; --c3:#2E8C7E; --c4:#3A6EA5;
+  --mono:'IBM Plex Mono',monospace; --disp:'Barlow Condensed',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--mono);font-size:13px;min-height:100vh}
+header{display:flex;align-items:baseline;gap:18px;padding:14px 22px 10px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+header h1{font-family:var(--disp);font-weight:700;font-size:26px;letter-spacing:.06em;text-transform:uppercase}
+header h1 span{color:var(--crane)}
+header .sub{color:var(--muted);font-size:12px}
+#clock{margin-left:auto;font-size:13px;color:var(--ink);background:var(--panel);border:1px solid var(--line);padding:6px 12px;border-radius:4px;display:flex;gap:14px}
+#clock b{color:var(--crane);font-weight:600}
+.statusflags{display:flex;gap:8px}
+.flag{padding:6px 10px;border-radius:4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--line);color:var(--faint)}
+.flag.on-storm{background:#15293B;border-color:var(--storm);color:var(--storm);animation:blink 1.1s infinite}
+.flag.on-fail{background:#2B1410;border-color:var(--alarm);color:var(--alarm);animation:blink .8s infinite}
+@keyframes blink{50%{opacity:.45}}
+main{padding:14px 22px 26px;display:flex;flex-direction:column;gap:14px;max-width:1480px;margin:0 auto}
+/* ---- escena ---- */
+#scene-wrap{position:relative;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:linear-gradient(#0B1826 0%,#0D2233 58%,#0A2433 60%,#081C2A 100%)}
+#scene{display:block;width:100%;height:auto}
+#rain{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .6s;
+  background-image:repeating-linear-gradient(115deg,rgba(140,190,230,.16) 0 1px,transparent 1px 14px);
+  animation:rainfall .5s linear infinite}
+#rain.on{opacity:1}
+@keyframes rainfall{to{background-position:-20px 28px}}
+@media (prefers-reduced-motion:reduce){#rain{animation:none}.flag{animation:none!important}}
+/* ---- fila inferior ---- */
+.row{display:grid;grid-template-columns:300px 1fr 290px;gap:14px;align-items:start}
+@media(max-width:1100px){.row{grid-template-columns:1fr 1fr}.log-card{grid-column:1/-1}}
+@media(max-width:720px){.row{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px}
+.card h2{font-family:var(--disp);font-size:15px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card h2::after{content:"";flex:1;height:1px;background:var(--line)}
+/* controles */
+.ctl{margin-bottom:13px}
+.ctl label{display:flex;justify-content:space-between;color:var(--muted);font-size:11.5px;margin-bottom:5px;letter-spacing:.03em}
+.ctl label output{color:var(--ink);font-weight:600}
+input[type=range]{width:100%;accent-color:var(--crane);height:18px}
+.seg{display:flex;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.seg button{flex:1;background:var(--panel2);border:0;color:var(--muted);font-family:var(--mono);font-size:12px;padding:7px 0;cursor:pointer}
+.seg button.sel{background:var(--crane);color:#0A141E;font-weight:600}
+.chk{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px;cursor:pointer;user-select:none;margin-bottom:10px}
+.chk input{accent-color:var(--crane);width:15px;height:15px}
+.btns{display:flex;gap:8px;margin-top:6px}
+.btns button{flex:1;font-family:var(--disp);font-size:14px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;padding:9px 0;border-radius:4px;cursor:pointer;border:1px solid var(--line);background:var(--panel2);color:var(--ink)}
+.btns button#btn-pause{border-color:var(--crane);color:var(--crane)}
+.btns button:hover{filter:brightness(1.25)}
+.note{color:var(--faint);font-size:10.5px;line-height:1.5;margin-top:10px;border-top:1px dashed var(--line);padding-top:8px}
+/* tablero VR */
+.vr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:900px){.vr-grid{grid-template-columns:repeat(2,1fr)}}
+.vr{background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:10px 12px;min-height:86px}
+.vr .tag{font-size:10px;letter-spacing:.12em;color:var(--crane);font-weight:600}
+.vr .name{font-size:10.5px;color:var(--muted);line-height:1.3;margin:2px 0 7px;min-height:26px}
+.vr .val{font-family:var(--disp);font-size:26px;font-weight:700;line-height:1;color:var(--ink)}
+.vr .val small{font-size:13px;color:var(--muted);font-family:var(--mono);font-weight:400;margin-left:3px}
+.vr .extra{font-size:10.5px;color:var(--faint);margin-top:4px}
+/* bitácora */
+.log-card #log{list-style:none;max-height:268px;overflow-y:auto;display:flex;flex-direction:column;gap:5px}
+#log li{font-size:11px;color:var(--muted);line-height:1.45;border-left:2px solid var(--line);padding-left:8px}
+#log li b{color:var(--ink);font-weight:500}
+#log li.ev-fail{border-color:var(--alarm)}#log li.ev-fail b{color:var(--alarm)}
+#log li.ev-storm{border-color:var(--storm)}#log li.ev-storm b{color:var(--storm)}
+#log li.ev-ok{border-color:var(--ok)}
+#log li .t{color:var(--faint);margin-right:6px}
+footer{color:var(--faint);font-size:10.5px;text-align:center;padding:0 22px 18px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Terminal <span>Baires</span></h1>
+  <div class="sub">Simulación de eventos discretos — flujo operativo de barcos · Grupo 07</div>
+  <div class="statusflags">
+    <div class="flag" id="flag-storm">Clima adverso</div>
+    <div class="flag" id="flag-fail">Falla de grúa</div>
+  </div>
+  <div id="clock">Mes <b id="ck-m">1</b> · Día <b id="ck-d">1</b> · <b id="ck-h">00:00</b></div>
+</header>
+
+<main>
+  <div id="scene-wrap">
+    <svg id="scene" viewBox="0 0 1240 470" xmlns="http://www.w3.org/2000/svg" aria-label="Vista animada del puerto"></svg>
+    <div id="rain"></div>
+  </div>
+
+  <div class="row">
+    <section class="card">
+      <h2>Parámetros</h2>
+      <div class="ctl">
+        <label>Cantidad de grúas (VD1)</label>
+        <div class="seg" id="seg-cranes">
+          <button data-v="1" class="sel">1 grúa</button>
+          <button data-v="2">2 grúas</button>
+        </div>
+      </div>
+      <div class="ctl">
+        <label>Llegadas <output id="o-rate">10 barcos/mes</output></label>
+        <input type="range" id="p-rate" min="4" max="20" value="10" step="1">
+      </div>
+      <div class="ctl">
+        <label>Medio-contenedores <output id="o-half">20 %</output></label>
+        <input type="range" id="p-half" min="0" max="50" value="20" step="5">
+      </div>
+      <label class="chk"><input type="checkbox" id="p-maint"> Mantenimiento preventivo (VD3)</label>
+      <label class="chk"><input type="checkbox" id="p-weather" checked> Alertas meteorológicas activas</label>
+      <div class="ctl">
+        <label>Velocidad <output id="o-speed">6 h/s</output></label>
+        <input type="range" id="p-speed" min="60" max="2880" value="360" step="60">
+      </div>
+      <div class="btns">
+        <button id="btn-pause">Pausar</button>
+        <button id="btn-reset">Reiniciar</button>
+      </div>
+      <div class="note">Distribuciones ajustadas con los datos históricos (tb_*.csv): grúa Triang(10,2 · 15,5 · 21,9) min/contenedor lleno y Triang(12,3 · 18,5 · 24,8) min/medio; amarre por porte de buque; fallas Exp(MTBF≈1034 min op.) + LogN(MTTR≈180 min) ⇒ ~15 % de indisponibilidad; clima Exp(11,1 días) con paros LogN(≈10 h). El preventivo asume MTBF×2,5 y MTTR×0,7.</div>
+    </section>
+
+    <section class="card">
+      <h2>Variables de referencia — resultados</h2>
+      <div class="vr-grid">
+        <div class="vr"><div class="tag">VR1</div><div class="name">Espera en antepuerto (prom.)</div><div class="val" id="vr1">—</div><div class="extra" id="vr1x"></div></div>
+        <div class="vr"><div class="tag">VR2</div><div class="name">Estadía total del barco (prom.)</div><div class="val" id="vr2">—</div><div class="extra" id="vr2x"></div></div>
+        <div class="vr"><div class="tag">VR3</div><div class="name">Utilización de la grúa</div><div class="val" id="vr3">—</div><div class="extra" id="vr3x"></div></div>
+        <div class="vr"><div class="tag">VR4</div><div class="name">Throughput del puerto</div><div class="val" id="vr4">—</div><div class="extra" id="vr4x"></div></div>
+        <div class="vr"><div class="tag">VR5</div><div class="name">Barcos en cola (prom. / máx.)</div><div class="val" id="vr5">—</div><div class="extra" id="vr5x"></div></div>
+        <div class="vr"><div class="tag">VR6</div><div class="name">Tiempo perdido por fallas</div><div class="val" id="vr6">—</div><div class="extra" id="vr6x"></div></div>
+      </div>
+    </section>
+
+    <section class="card log-card">
+      <h2>Bitácora de eventos</h2>
+      <ul id="log"></ul>
+    </section>
+  </div>
+</main>
+<footer>Procesos Estocásticos y Simulación · UCA 2026 c1 · Caso Terminal Baires (La Plata) — modelo conceptual SIM-26C1-G07</footer>
+<script>
+/* ======================= MOTOR DE SIMULACIÓN ======================= */
+// Unidad de tiempo: minutos simulados. 1 día = 1440, 1 mes = 43200.
+const DAY=1440, MONTH=43200;
+const R={ // parámetros ajustados a los CSV del proyecto
+  craneFull:{a:10.2,c:15.5,b:21.9},      // tb_operaciones_grua (Contenedor_Lleno)
+  craneHalf:{a:12.3,c:18.5,b:24.8},      // tb_operaciones_grua (Medio_Contenedor)
+  moor:{ Chico:{a:15.7,c:21.3,b:29.4}, Mediano:{a:31.0,c:42.2,b:52.4}, Grande:{a:47.6,c:61.7,b:76.0} },
+  unmoor:{ Chico:{a:13.1,c:18.8,b:26.5}, Mediano:{a:26.2,c:36.5,b:47.9}, Grande:{a:41.6,c:55.3,b:69.8} },
+  sizeProbs:[['Chico',.45],['Mediano',.34],['Grande',.21]], // frecuencias tb_tiempos_amarre
+  mtbf:1034, mttr:{mu:5.18,sigma:0.171},                    // tb_registro_fallas (~14,9% indisp.)
+  weatherGapDays:11.1, weatherDur:{mu:2.235,sigma:0.384}    // tb_registro_clima (horas)
+};
+const rnd=Math.random;
+const expS=m=>-m*Math.log(1-rnd());
+const triS=({a,c,b})=>{const u=rnd(),f=(c-a)/(b-a);return u<f? a+Math.sqrt(u*(b-a)*(c-a)) : b-Math.sqrt((1-u)*(b-a)*(b-c));};
+const lognS=({mu,sigma})=>{let u=0,v=0;while(!u)u=rnd();while(!v)v=rnd();const z=Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);return Math.exp(mu+sigma*z);};
+const rint=(a,b)=>a+Math.floor(rnd()*(b-a+1));
+const pick=ps=>{let u=rnd();for(const [k,p] of ps){if(u<p)return k;u-=p}return ps[ps.length-1][0];};
+
+const P={cranes:1,rate:10,pHalf:.20,maint:false,weather:true,speed:360,paused:false};
+
+let S; // estado
+function freshState(){
+  return {
+    t:0, nextArrival:expS(MONTH/P.rate),
+    ships:[], queue:[], dockShip:null, departed:[], idSeq:1,
+    cranes:[newCrane(1),newCrane(2)],
+    storm:false, stormUntil:0, nextStorm:P.weather?expS(R.weatherGapDays*DAY):Infinity,
+    // estadísticas
+    waits:[], stays:[], shipsServed:0, contMoved:0, contHalf:0,
+    qInt:0, qMax:0, craneOp:0, craneDown:0, halfExtraMin:0,
+    log:[]
+  };
+}
+function newCrane(id){return {id, up:true, opLeft:expS(mtbfAdj()), repLeft:0, downTotal:0};}
+const mtbfAdj=()=>R.mtbf*(P.maint?2.5:1);
+const mttrS=()=>lognS(R.mttr)*(P.maint?0.7:1);
+
+function newShip(t){
+  const size=pick(R.sizeProbs);
+  const nU=rint(5,10), nL=rint(10,15);
+  let work=0, halves=0, extra=0;
+  for(let i=0;i<nU+nL;i++){
+    if(rnd()<P.pHalf){halves++;work+=triS(R.craneHalf);extra+=R.craneHalf.c-R.craneFull.c;}
+    else work+=triS(R.craneFull);
+  }
+  return {id:S.idSeq++, size, tArr:t, tDock:null, nU,nL, halves, extraHalf:extra,
+    phase:'queue', // queue → toDock → amarre → descarga → carga → desamarre → out
+    phaseLeft:0, workTotal:work, workLeft:work, contDone:0,
+    moorT:triS(R.moor[size]), unmoorT:triS(R.unmoor[size]),
+    x:0,y:0 // posición visual
+  };
+}
+
+const fmtT=m=>{const d=Math.floor(m/DAY),h=Math.floor(m%DAY/60),mi=Math.floor(m%60);return `d${d+1} ${String(h).padStart(2,'0')}:${String(mi).padStart(2,'0')}`};
+const fmtH=m=>m>=DAY? (m/DAY).toFixed(1)+' días' : (m/60).toFixed(1)+' h';
+function logEv(txt,cls){S.log.unshift({t:S.t,txt,cls});if(S.log.length>60)S.log.pop();dirtyLog=true;}
+
+/* paso de simulación: dt en minutos simulados */
+function step(dt){
+  const st=S;
+  // --- clima ---
+  if(P.weather){
+    if(!st.storm && st.t>=st.nextStorm){
+      st.storm=true; st.stormUntil=st.t+lognS(R.weatherDur)*60;
+      logEv('Alerta meteorológica: el puerto suspende operaciones','ev-storm');
+    }
+    if(st.storm && st.t>=st.stormUntil){
+      st.storm=false; st.nextStorm=st.t+expS(R.weatherGapDays*DAY);
+      logEv('Clima apto: se reanudan las operaciones','ev-ok');
+    }
+  } else if(st.storm){st.storm=false;}
+
+  // --- llegadas ---
+  while(st.t>=st.nextArrival){
+    const sh=newShip(st.nextArrival);
+    st.ships.push(sh); st.queue.push(sh);
+    logEv(`Barco #${sh.id} (${sh.size}) llega al antepuerto — ${sh.nU}↓/${sh.nL}↑ cont. (${sh.halves} medios)`);
+    st.nextArrival+=expS(MONTH/P.rate);
+  }
+
+  // --- estadística de cola (integral temporal) ---
+  st.qInt+=st.queue.length*dt;
+  st.qMax=Math.max(st.qMax,st.queue.length);
+
+  // --- asignación de muelle ---
+  if(!st.dockShip && st.queue.length && !st.storm){
+    const sh=st.queue.shift();
+    st.dockShip=sh; sh.phase='toDock'; sh.phaseLeft=18;
+    sh.tDock=st.t; st.waits.push(st.t-sh.tArr);
+    logEv(`Barco #${sh.id}: muelle libre, ingresa con el práctico a bordo`,'ev-ok');
+  }
+
+  // --- grúas: reparación / fallas ---
+  const activeCranes=Math.min(P.cranes,2);
+  for(let i=0;i<activeCranes;i++){
+    const c=st.cranes[i];
+    if(!c.up){
+      c.repLeft-=dt; c.downTotal+=dt; st.craneDown+=dt;
+      if(c.repLeft<=0){c.up=true;c.opLeft=expS(mtbfAdj());logEv(`Grúa ${c.id} reparada y operativa`,'ev-ok');}
+    }
+  }
+
+  // --- barco en muelle ---
+  const sh=st.dockShip;
+  if(sh){
+    if(sh.phase==='toDock'||sh.phase==='out'){
+      sh.phaseLeft-=dt;
+      if(sh.phase==='toDock'&&sh.phaseLeft<=0){sh.phase='amarre';sh.phaseLeft=sh.moorT;}
+      if(sh.phase==='out'&&sh.phaseLeft<=0){
+        st.dockShip=null; st.ships=st.ships.filter(x=>x!==sh);
+        st.stays.push(st.t-sh.tArr); st.shipsServed++;
+        logEv(`Barco #${sh.id} parte — estadía total ${fmtH(st.t-sh.tArr)}`,'ev-ok');
+      }
+    } else if(!st.storm){
+      if(sh.phase==='amarre'||sh.phase==='desamarre'){
+        sh.phaseLeft-=dt;
+        if(sh.phaseLeft<=0){
+          if(sh.phase==='amarre'){sh.phase='descarga';logEv(`Barco #${sh.id}: fin del amarre, inicia descarga`);}
+          else {sh.phase='out';sh.phaseLeft=18;logEv(`Barco #${sh.id}: fin del desamarre`);}
+        }
+      } else if(sh.phase==='descarga'||sh.phase==='carga'){
+        let upC=0;
+        for(let i=0;i<activeCranes;i++) if(st.cranes[i].up) upC++;
+        if(upC>0){
+          const adv=upC*dt;
+          // desgaste de las grúas operando
+          for(let i=0;i<activeCranes;i++){
+            const c=st.cranes[i];
+            if(!c.up)continue;
+            c.opLeft-=dt; st.craneOp+=dt;
+            if(c.opLeft<=0){c.up=false;c.repLeft=mttrS();
+              logEv(`Falla mecánica en grúa ${c.id} — reparación estimada ${fmtH(c.repLeft)}`,'ev-fail');}
+          }
+          const prev=sh.workLeft;
+          sh.workLeft=Math.max(0,sh.workLeft-adv);
+          // contenedores movidos (proporcional al avance)
+          const totC=sh.nU+sh.nL;
+          const doneNow=Math.floor((1-sh.workLeft/sh.workTotal)*totC);
+          if(doneNow>sh.contDone){st.contMoved+=doneNow-sh.contDone;sh.contDone=doneNow;}
+          // transición descarga→carga según fracción de trabajo
+          const unloadFrac=sh.nU/totC;
+          if(sh.phase==='descarga'&&(1-sh.workLeft/sh.workTotal)>=unloadFrac){
+            sh.phase='carga';logEv(`Barco #${sh.id}: fin de la descarga, inicia carga`);
+          }
+          if(sh.workLeft<=0){
+            sh.phase='desamarre';sh.phaseLeft=sh.unmoorT;
+            st.contHalf+=sh.halves; st.halfExtraMin+=sh.extraHalf;
+            logEv(`Barco #${sh.id}: fin de la carga, inicia desamarre`);
+          }
+        }
+      }
+    }
+  }
+  st.t+=dt;
+}
+</script>
+<script>
+/* ======================= ESCENA SVG ======================= */
+const svg=document.getElementById('scene');
+const NS='http://www.w3.org/2000/svg';
+const BERTH_X=940, WATER_Y=335, EXIT_X=1320;
+const qSlot=i=>({x:90+(i%4)*150+(i>=4?40:0), y:WATER_Y+18+Math.floor(i/4)*52});
+
+svg.innerHTML=`
+<defs>
+  <linearGradient id="wat" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#0E3247"/><stop offset="1" stop-color="#081E2D"/>
+  </linearGradient>
+</defs>
+<rect x="0" y="300" width="1240" height="170" fill="url(#wat)"/>
+<g stroke="#1A465E" stroke-width="1" opacity=".5">
+  <line x1="40" y1="330" x2="180" y2="330"/><line x1="300" y1="370" x2="430" y2="370"/>
+  <line x1="120" y1="430" x2="280" y2="430"/><line x1="520" y1="345" x2="640" y2="345"/>
+  <line x1="480" y1="420" x2="610" y2="420"/><line x1="680" y1="395" x2="760" y2="395"/>
+</g>
+<!-- skyline lejano -->
+<g fill="#13283A">
+  <rect x="0" y="252" width="60" height="48"/><rect x="70" y="266" width="34" height="34"/>
+  <rect x="120" y="244" width="26" height="56"/><rect x="160" y="272" width="48" height="28"/>
+  <rect x="230" y="258" width="30" height="42"/><rect x="280" y="276" width="60" height="24"/>
+  <rect x="360" y="262" width="24" height="38"/><rect x="400" y="270" width="44" height="30"/>
+</g>
+<!-- zona antepuerto -->
+<rect x="36" y="316" width="600" height="138" fill="none" stroke="#2A4A60" stroke-dasharray="6 6" rx="8"/>
+<text x="46" y="338" fill="#54697A" font-family="Barlow Condensed" font-size="15" letter-spacing="2">ANTEPUERTO · COLA FCFS</text>
+<!-- muelle -->
+<g id="pier">
+  <rect x="770" y="262" width="470" height="46" fill="#22313F"/>
+  <rect x="770" y="262" width="470" height="7" fill="#2E4254"/>
+  <rect x="790" y="308" width="10" height="34" fill="#17222D"/><rect x="900" y="308" width="10" height="34" fill="#17222D"/>
+  <rect x="1010" y="308" width="10" height="34" fill="#17222D"/><rect x="1120" y="308" width="10" height="34" fill="#17222D"/>
+  <text x="782" y="282" fill="#54697A" font-family="Barlow Condensed" font-size="15" letter-spacing="2">MUELLE · CAP. 1 BUQUE</text>
+  <!-- depósito y contenedores en tierra -->
+  <rect x="1150" y="216" width="80" height="46" fill="#1B2C3C"/><rect x="1150" y="216" width="80" height="8" fill="#28405200"/>
+  <g>
+    <rect x="780" y="246" width="26" height="14" fill="#C4513A"/><rect x="808" y="246" width="26" height="14" fill="#2E8C7E"/>
+    <rect x="794" y="231" width="26" height="14" fill="#D98E2B"/><rect x="836" y="246" width="13" height="14" fill="#3A6EA5"/>
+  </g>
+</g>
+<g id="cranes"></g>
+<g id="ships"></g>
+<g id="fx"></g>`;
+const gCranes=document.getElementById('cranes'),gShips=document.getElementById('ships'),gFx=document.getElementById('fx');
+
+const SHIP_LEN={Chico:104,Mediano:136,Grande:168};
+const HULLCOLOR={Chico:'#3A6EA5',Mediano:'#7E5BA6',Grande:'#A8503C'};
+const PHASE_ES={queue:'EN ESPERA',toDock:'INGRESANDO',amarre:'AMARRE',descarga:'DESCARGA',carga:'CARGA',desamarre:'DESAMARRE',out:'ZARPANDO'};
+
+function shipSVG(sh,working){
+  const L=SHIP_LEN[sh.size],H=22,x=sh.x-L/2,y=sh.y;
+  const tot=sh.nU+sh.nL;
+  const prog=sh.workTotal? (1-sh.workLeft/sh.workTotal):0;
+  // contenedores en cubierta
+  let boxes='',n=Math.min(8,Math.ceil(tot/3)),bw=(L-46)/n;
+  const cols=['#C4513A','#D98E2B','#2E8C7E','#3A6EA5'];
+  for(let i=0;i<n;i++){
+    const lit=(sh.phase==='descarga')? i/n>=prog : (sh.phase==='carga'? i/n<prog : true);
+    boxes+=`<rect x="${x+20+i*bw}" y="${y-10}" width="${bw-2}" height="9" fill="${cols[i%4]}" opacity="${lit?1:.18}"/>`;
+  }
+  let bar='';
+  if(sh.phase==='descarga'||sh.phase==='carga')
+    bar=`<rect x="${x}" y="${y-30}" width="${L}" height="4" fill="#152634"/>
+         <rect x="${x}" y="${y-30}" width="${L*prog}" height="4" fill="#F2B23E"/>
+         <text x="${sh.x}" y="${y-36}" text-anchor="middle" fill="#7E94A5" font-size="10" font-family="IBM Plex Mono">${sh.contDone}/${tot} cont.</text>`;
+  const lblc=sh.phase==='queue'?'#54697A':'#F2B23E';
+  return `<g>
+    ${bar}
+    ${boxes}
+    <path d="M${x} ${y} h${L} l-14 ${H} h-${L-28} Z" fill="${HULLCOLOR[sh.size]}"/>
+    <rect x="${x}" y="${y+4}" width="${L}" height="3" fill="#0A141E" opacity=".35"/>
+    <rect x="${x+L-34}" y="${y-16}" width="18" height="16" fill="#D7DEE4"/>
+    <rect x="${x+L-30}" y="${y-12}" width="4" height="4" fill="#0A141E"/>
+    <text x="${sh.x}" y="${y+38}" text-anchor="middle" fill="${lblc}" font-size="11" font-family="Barlow Condensed" letter-spacing="1.5">#${sh.id} · ${PHASE_ES[sh.phase]}</text>
+  </g>`;
+}
+
+let trolleyPh=0;
+function craneSVG(i,c,active,working){
+  const cx=870+i*150, top=150;
+  const ghost=!active;
+  const tx=cx-20+Math.sin(trolleyPh+i*2.1)*( working&&c.up&&active ?52:0);
+  const hook=working&&c.up&&active? 40+Math.abs(Math.cos(trolleyPh*1.3+i))*70 : 46;
+  const col=ghost?'#22313F':(c.up?'#F2B23E':'#E2543F');
+  return `<g opacity="${ghost?0.28:1}">
+    <rect x="${cx-6}" y="${top+30}" width="9" height="${262-top-30}" fill="${col}"/>
+    <rect x="${cx+34}" y="${top+30}" width="9" height="${262-top-30}" fill="${col}"/>
+    <rect x="${cx-70}" y="${top+18}" width="190" height="11" fill="${col}"/>
+    <path d="M${cx-6} ${top+30} l22 -26 h12 l22 26 Z" fill="${col}"/>
+    <rect x="${tx}" y="${top+29}" width="26" height="12" fill="#D7DEE4"/>
+    <line x1="${tx+13}" y1="${top+41}" x2="${tx+13}" y2="${top+41+hook}" stroke="#B9C6D0" stroke-width="2"/>
+    ${working&&c.up&&active?`<rect x="${tx+1}" y="${top+41+hook}" width="24" height="11" fill="#C4513A"/>`:''}
+    ${!c.up&&active?`<g><circle cx="${cx+16}" cy="${top+2}" r="9" fill="#E2543F"><animate attributeName="opacity" values="1;.25;1" dur="0.9s" repeatCount="indefinite"/></circle><text x="${cx+16}" y="${top+6}" text-anchor="middle" font-size="11" fill="#fff" font-weight="bold">!</text></g>`:''}
+    <text x="${cx+16}" y="${top-12}" text-anchor="middle" fill="${ghost?'#33485C':'#7E94A5'}" font-size="12" font-family="Barlow Condensed" letter-spacing="1.5">GRÚA ${i+1}${!active?' · INACTIVA':(c.up?'':' · EN REPARACIÓN')}</text>
+  </g>`;
+}
+
+function render(rdt){
+  trolleyPh+=rdt*2.2;
+  // posiciones objetivo
+  S.queue.forEach((sh,i)=>{const sl=qSlot(Math.min(i,7));sh.tx=sl.x;sh.ty=sl.y;});
+  if(S.dockShip){const d=S.dockShip;
+    d.ty=WATER_Y+6;
+    d.tx=(d.phase==='out')?EXIT_X:BERTH_X;
+    if(d.phase==='toDock'&&d.x===0){d.x=d.tx0||d.x;}
+  }
+  const all=S.ships;
+  for(const sh of all){
+    if(sh.x===0&&sh.y===0){sh.x=-80;sh.y=sh.ty||WATER_Y+18;} // entra por la izquierda
+    const k=Math.min(1,rdt*1.6);
+    sh.x+=( (sh.tx??sh.x)-sh.x)*k; sh.y+=((sh.ty??sh.y)-sh.y)*k;
+  }
+  const working=S.dockShip&&(S.dockShip.phase==='descarga'||S.dockShip.phase==='carga')&&!S.storm;
+  let shipsHtml='';
+  const visQ=S.queue.slice(0,8);
+  for(const sh of visQ) shipsHtml+=shipSVG(sh);
+  if(S.queue.length>8) shipsHtml+=`<text x="600" y="445" fill="#E2543F" font-size="12" font-family="IBM Plex Mono">+${S.queue.length-8} barcos en espera</text>`;
+  if(S.dockShip) shipsHtml+=shipSVG(S.dockShip,working);
+  gShips.innerHTML=shipsHtml;
+  let cr='';
+  for(let i=0;i<2;i++) cr+=craneSVG(i,S.cranes[i],i<P.cranes,working);
+  gCranes.innerHTML=cr;
+  gFx.innerHTML=S.storm?`<text x="620" y="60" text-anchor="middle" fill="#6FA7D9" font-family="Barlow Condensed" font-size="22" letter-spacing="4">⛈ PUERTO CERRADO POR CLIMA ADVERSO</text>`:'';
+  document.getElementById('rain').classList.toggle('on',S.storm);
+  document.getElementById('flag-storm').classList.toggle('on-storm',S.storm);
+  const anyFail=S.cranes.slice(0,P.cranes).some(c=>!c.up);
+  document.getElementById('flag-fail').classList.toggle('on-fail',anyFail);
+}
+</script>
+<script>
+/* ======================= UI / TABLERO ======================= */
+const $=id=>document.getElementById(id);
+let dirtyLog=true;
+const mean=a=>a.length?a.reduce((s,x)=>s+x,0)/a.length:0;
+
+function renderStats(){
+  const t=Math.max(S.t,1), months=t/MONTH;
+  const w=mean(S.waits), st=mean(S.stays);
+  $('vr1').innerHTML=S.waits.length?(w/60).toFixed(1)+'<small>h</small>':'—';
+  $('vr1x').textContent=S.waits.length?`sobre ${S.waits.length} ingresos`:'sin datos aún';
+  $('vr2').innerHTML=S.stays.length?(st/60).toFixed(1)+'<small>h</small>':'—';
+  $('vr2x').textContent=S.stays.length?`máx ${(Math.max(...S.stays)/60).toFixed(1)} h`:'sin partidas aún';
+  const cap=S.capInt||1;
+  $('vr3').innerHTML=(100*S.craneOp/cap).toFixed(1)+'<small>%</small>';
+  $('vr3x').textContent=`operativo ${(S.craneOp/60).toFixed(0)} h de ${(cap/60).toFixed(0)} h-grúa`;
+  $('vr4').innerHTML=(S.shipsServed/months).toFixed(1)+'<small>barcos/mes</small>';
+  $('vr4x').textContent=`${(S.contMoved/months).toFixed(0)} cont./mes`;
+  $('vr5').innerHTML=(S.qInt/t).toFixed(2)+'<small>/ máx '+S.qMax+'</small>';
+  $('vr5x').textContent=`${S.queue.length} en cola ahora`;
+  $('vr6').innerHTML=(S.craneDown/60).toFixed(1)+'<small>h</small>';
+  const opTot=S.craneOp+S.craneDown;
+  $('vr6x').textContent=`≈${opTot?(100*S.craneDown/opTot).toFixed(1):'0.0'}% del tiempo operativo · sobrecosto medios ${(S.halfExtraMin/60).toFixed(1)} h (VD2)`;
+  // reloj
+  $('ck-m').textContent=Math.floor(S.t/MONTH)+1;
+  $('ck-d').textContent=Math.floor((S.t%MONTH)/DAY)+1;
+  const h=Math.floor((S.t%DAY)/60),m=Math.floor(S.t%60);
+  $('ck-h').textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+  if(dirtyLog){
+    $('log').innerHTML=S.log.map(e=>`<li class="${e.cls||''}"><span class="t">${fmtT(e.t)}</span><b>${e.txt}</b></li>`).join('');
+    dirtyLog=false;
+  }
+}
+
+/* ======================= CONTROLES ======================= */
+$('p-rate').oninput=e=>{P.rate=+e.target.value;$('o-rate').textContent=P.rate+' barcos/mes';};
+$('p-half').oninput=e=>{P.pHalf=+e.target.value/100;$('o-half').textContent=e.target.value+' %';};
+$('p-speed').oninput=e=>{P.speed=+e.target.value;$('o-speed').textContent=(P.speed/60).toFixed(0)+' h/s';};
+$('p-maint').onchange=e=>{P.maint=e.target.checked;logEv(P.maint?'Se activa el plan de mantenimiento preventivo (VD3)':'Se desactiva el mantenimiento preventivo','ev-ok');};
+$('p-weather').onchange=e=>{P.weather=e.target.checked;if(P.weather&&S.nextStorm===Infinity)S.nextStorm=S.t+expS(R.weatherGapDays*DAY);};
+document.querySelectorAll('#seg-cranes button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#seg-cranes button').forEach(x=>x.classList.remove('sel'));
+  b.classList.add('sel');P.cranes=+b.dataset.v;
+  logEv(P.cranes===2?'Escenario con 2 grúas operando en paralelo (VD1)':'Escenario base: 1 grúa','ev-ok');
+});
+$('btn-pause').onclick=()=>{P.paused=!P.paused;$('btn-pause').textContent=P.paused?'Reanudar':'Pausar';};
+$('btn-reset').onclick=()=>{S=freshState();dirtyLog=true;logEv('Simulación reiniciada — estadísticas en cero');};
+
+/* ======================= BUCLE PRINCIPAL ======================= */
+let last=performance.now(),acc=0;
+function loop(now){
+  const rdt=Math.min(.1,(now-last)/1000); last=now;
+  if(!P.paused){
+    let simDt=rdt*P.speed;
+    S.capInt=(S.capInt||0)+P.cranes*simDt;
+    while(simDt>0){const h=Math.min(simDt,4);step(h);simDt-=h;}
+  }
+  render(rdt);
+  acc+=rdt; if(acc>.2){renderStats();acc=0;}
+  requestAnimationFrame(loop);
+}
+S=freshState();
+logEv('Simulación iniciada · Terminal Baires · escenario base (1 grúa, 10 barcos/mes, 20% medios)','ev-ok');
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
