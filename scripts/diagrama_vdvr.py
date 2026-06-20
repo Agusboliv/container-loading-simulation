@@ -93,7 +93,7 @@ def arrow(ax, x1, y1, x2, y2, color="#888", lw=1.1, ls="--", rad=0.0):
 
 
 def main():
-    OUT_DIR = Path("informe/assets")
+    OUT_DIR = Path(__file__).resolve().parent.parent / "informe" / "assets"
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     OUT_PATH = OUT_DIR / "diagrama_vdvr.png"
 

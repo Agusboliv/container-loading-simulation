@@ -64,7 +64,7 @@ def actividad_html(recurso, actividad, detalle=None):
 
 
 def main():
-    OUT_DIR = Path("informe/assets")
+    OUT_DIR = Path(__file__).resolve().parent.parent / "informe" / "assets"
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     OUT_NAME = "diagrama_proceso"
 
