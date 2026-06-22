@@ -292,9 +292,6 @@ footer{
       <div class="stat"><div class="tag">Volumen</div><div class="name">medios movidos / año</div><div class="val">469</div></div>
       <div class="stat"><div class="tag">Tiempo grúa</div><div class="name">extra/año por medios</div><div class="val">21,5 <small>h</small></div></div>
     </div>
-    <div class="card" style="margin-top:16px"><div class="fn">Base tarifaria</div>
-      <p class="muted" style="font-size:14px;line-height:1.6">El recargo por medio-contenedor debería cubrir <b>~2,8 min</b> adicionales de grúa por pieza. Con costo horario de grúa <b>C</b> ($/h), el recargo sugerido por medio ≈ <b class="cr">C × 0,046</b> (más prorrateo de fallas/ociosidad).</p>
-    </div>
     <p class="note"><b>Conclusión:</b> el sobrecosto es real, cuantificable y <b>trazable a los datos</b>. Un recargo proporcional es justificable; además desincentiva el formato más costoso de operar. <b class="ok">Confirma H2.</b></p>
   </section>
 
@@ -483,11 +480,10 @@ footer{
         <p class="cap">Histograma + densidad ajustada (línea ámbar): Exponencial · Triangular · Normal · LogNormal · Uniforme.</p>
         <div class="card" style="margin-top:10px;padding:9px 13px">
           <div class="fn">Relaciones cuantificadas</div>
-          <p class="muted" style="font-size:11.5px;line-height:1.5">Amarre <b>~ tamaño del buque</b> · tiempo de grúa <b>~ tipo de pieza</b> (medio <b class="cr">+17,7%</b>) · fallas <b>~ minutos operativos</b>, no calendario.</p>
+          <p class="muted" style="font-size:11.5px;line-height:1.5">Amarre <b>~ tamaño del buque</b>: un buque grande tarda casi el triple que uno chico · tiempo de grúa <b>~ tipo de pieza</b>: el medio-contenedor suma <b class="cr">+17,7%</b> sobre uno lleno · fallas <b>~ minutos operativos</b> de la grúa, no calendario: sólo se desgasta cuando trabaja.</p>
         </div>
       </div>
     </div>
-    <p class="note"><b>Criterio honesto:</b> no se descartan las colas largas de las exponenciales (no son outliers); el KS se usa como criterio comparativo entre candidatas, no como prueba formal.</p>
   </section>
 
   <!-- 14 · GESTIÓN DEL CONOCIMIENTO · DIFICULTADES -->
@@ -502,10 +498,6 @@ footer{
       <div class="card">
         <div class="fn">Los datos refutaron supuestos</div>
         <p class="muted" style="font-size:12.5px;line-height:1.55">El <i>input analysis</i> corrigió el modelo conceptual: el amarre <b>depende del tamaño</b>, el clima es un <b>proceso de eventos</b> (no Bernoulli por paso) y la duración de paros ajusta a <b>Uniforme</b>.</p>
-      </div>
-      <div class="card">
-        <div class="fn">Medir bien el sobrecosto del medio (VD2)</div>
-        <p class="muted" style="font-size:12.5px;line-height:1.55">La diferencia de <b>modas</b> sobreestimaba (~3,4 min). El valor correcto es la diferencia de <b>medias</b> (~2,8 min) — clave para no inflar la base tarifaria.</p>
       </div>
       <div class="card">
         <div class="fn">Técnicas fuera del programa</div>
