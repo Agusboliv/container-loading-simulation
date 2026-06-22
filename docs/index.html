@@ -223,40 +223,8 @@ footer{
     <p class="note">La simulación va a <b class="ok">confirmar</b> dos de estas hipótesis… y <b class="al">dar vuelta</b> una: spoiler — el puerto no tiene un problema de capacidad.</p>
   </section>
 
-  <!-- BLOQUE 2 · RESULTADOS -->
-  <section class="slide" data-section="Resultados">
-    <div class="kicker">Resultados</div>
-    <h2 class="head">El puerto está sobredimensionado</h2>
-    <p class="lead" style="font-size:13px">Medimos 6 <b>variables de referencia</b> — VR1 espera · VR2 estadía · VR3 utilización · VR4 throughput · VR5 cola · VR6 perdido por fallas — en 4 escenarios: <span class="dotc1">●</span>Base · <span class="dotc3">●</span>A (2 grúas) · <span class="dotc4">●</span>B (mant.) · <span class="dotc2">●</span>C (combinado).</p>
-    <img class="fig" src="assets/fig_bars.png" alt="Comparación de escenarios con IC95">
-    <div class="chips">
-      <div class="chip"><div class="v">~7<small>%</small></div><div class="l">utilización de grúa</div></div>
-      <div class="chip"><div class="v">~0</div><div class="l">cola en antepuerto</div></div>
-      <div class="chip"><div class="v">9,7</div><div class="l">barcos/mes</div></div>
-      <div class="chip"><div class="v">&lt;1<small> h</small></div><div class="l">espera media</div></div>
-    </div>
-    <p class="note"><b>Lectura clave:</b> utilización ~<b>7%</b> y cola <b>~0</b> → el cuello de botella <b>no</b> es la capacidad. Esto <b class="al">da vuelta la hipótesis H1</b> y cambia el sentido de las tres decisiones.</p>
-  </section>
-
-  <!-- BLOQUE 2 · CONCLUSIONES Y RECOMENDACIÓN -->
-  <section class="slide" data-section="Conclusiones y recomendación">
-    <div class="kicker">Síntesis · conclusiones y recomendación</div>
-    <h2 class="head">Conclusiones y recomendación</h2>
-    <ul class="bullets" style="margin-top:4px">
-      <li><b class="al">H1 — refutada:</b> el puerto está holgado; la 2ª grúa no resuelve capacidad, sólo acelera el turnaround (−36% estadía).</li>
-      <li><b class="ok">H2 — confirmada:</b> el medio cuesta +17,7% de grúa; la tarifa es trazable a los datos.</li>
-      <li><b class="ok">H3 — confirmada:</b> el mantenimiento recorta −72% el tiempo perdido por fallas.</li>
-    </ul>
-    <div class="grid g3" style="margin-top:18px">
-      <div class="card" style="border-color:var(--ok)"><div class="fn" style="color:var(--ok)">1 · Priorizar</div><div style="font-family:var(--disp);font-size:24px;font-weight:700;line-height:1">Mantenimiento</div><p class="muted" style="font-size:12px;margin-top:7px;line-height:1.5">Mayor relación impacto/costo sobre la disponibilidad.</p></div>
-      <div class="card" style="border-color:var(--crane)"><div class="fn">2 · Aplicar</div><div style="font-family:var(--disp);font-size:24px;font-weight:700;line-height:1">Tarifa diferencial</div><p class="muted" style="font-size:12px;margin-top:7px;line-height:1.5">Recargo ≈ C × 0,046 por medio-contenedor.</p></div>
-      <div class="card" style="border-color:var(--faint)"><div class="fn" style="color:var(--faint)">3 · Diferir</div><div style="font-family:var(--disp);font-size:24px;font-weight:700;line-height:1;color:var(--faint)">Segunda grúa</div><p class="muted" style="font-size:12px;margin-top:7px;line-height:1.5">Sólo si el turnaround tiene valor comercial.</p></div>
-    </div>
-    <p class="note"><b>En una línea:</b> el cuello de botella no es la capacidad sino la <b>disponibilidad</b> de la grúa. Mantenimiento + tarifa resuelven más, por menos, que una segunda grúa. <span class="faint">(El detalle por decisión, en el bloque de experimentación.)</span></p>
-  </section>
-
-  <!-- BLOQUE 3 · CUADROS FINALES · VARIABLES DE DECISIÓN Y REFERENCIA -->
-  <section class="slide" data-section="Variables del modelo">
+  <!-- 4 · MARCO DEL ESTUDIO · VARIABLES (VD/VR) -->
+  <section class="slide" data-section="Marco del estudio">
     <div class="kicker">Marco del estudio</div>
     <h2 class="head">Qué decidimos y qué medimos</h2>
     <div class="grid g2" style="margin-top:8px;align-items:start">
@@ -286,7 +254,22 @@ footer{
     <p class="note"><b>VD = entradas</b> (las decisiones que evaluamos) · <b>VR = salidas</b> (cómo medimos el desempeño de cada escenario). La simulación conecta las palancas con los indicadores.</p>
   </section>
 
-  <!-- BLOQUE 4 · EXPERIMENTACIÓN · VD1 -->
+  <!-- 5 · RESULTADOS -->
+  <section class="slide" data-section="Resultados">
+    <div class="kicker">Resultados</div>
+    <h2 class="head">El puerto está sobredimensionado</h2>
+    <p class="lead" style="font-size:13px">Medimos 6 <b>variables de referencia</b> — VR1 espera · VR2 estadía · VR3 utilización · VR4 throughput · VR5 cola · VR6 perdido por fallas — en 4 escenarios: <span class="dotc1">●</span>Base · <span class="dotc3">●</span>A (2 grúas) · <span class="dotc4">●</span>B (mant.) · <span class="dotc2">●</span>C (combinado).</p>
+    <img class="fig" src="assets/fig_bars.png" alt="Comparación de escenarios con IC95">
+    <div class="chips">
+      <div class="chip"><div class="v">~7<small>%</small></div><div class="l">utilización de grúa</div></div>
+      <div class="chip"><div class="v">~0</div><div class="l">cola en antepuerto</div></div>
+      <div class="chip"><div class="v">9,7</div><div class="l">barcos/mes</div></div>
+      <div class="chip"><div class="v">&lt;1<small> h</small></div><div class="l">espera media</div></div>
+    </div>
+    <p class="note"><b>Lectura clave:</b> utilización ~<b>7%</b> y cola <b>~0</b> → el cuello de botella <b>no</b> es la capacidad. Esto <b class="al">da vuelta la hipótesis H1</b> y cambia el sentido de las tres decisiones.</p>
+  </section>
+
+  <!-- 6 · VD1 · SEGUNDA GRÚA -->
   <section class="slide" data-section="VD1 · Segunda grúa">
     <div class="kicker">Decisión 1 · resultado</div>
     <h2 class="head">¿Conviene la segunda grúa?</h2>
@@ -335,7 +318,24 @@ footer{
     <p class="note"><b>Conclusión:</b> ataca directamente la VR6 — la palanca <b>más barata y de mayor impacto sobre la disponibilidad</b>. Prioritaria por sobre una segunda grúa. <b class="ok">Confirma H3.</b></p>
   </section>
 
-  <!-- BLOQUE 4 · EXPERIMENTACIÓN · VALIDACIÓN Y RIGOR -->
+  <!-- 9 · SÍNTESIS · CONCLUSIONES Y RECOMENDACIÓN -->
+  <section class="slide" data-section="Conclusiones y recomendación">
+    <div class="kicker">Síntesis · conclusiones y recomendación</div>
+    <h2 class="head">Conclusiones y recomendación</h2>
+    <ul class="bullets" style="margin-top:4px">
+      <li><b class="al">H1 — refutada:</b> el puerto está holgado; la 2ª grúa no resuelve capacidad, sólo acelera el turnaround (−36% estadía).</li>
+      <li><b class="ok">H2 — confirmada:</b> el medio cuesta +17,7% de grúa; la tarifa es trazable a los datos.</li>
+      <li><b class="ok">H3 — confirmada:</b> el mantenimiento recorta −72% el tiempo perdido por fallas.</li>
+    </ul>
+    <div class="grid g3" style="margin-top:18px">
+      <div class="card" style="border-color:var(--ok)"><div class="fn" style="color:var(--ok)">1 · Priorizar</div><div style="font-family:var(--disp);font-size:24px;font-weight:700;line-height:1">Mantenimiento</div><p class="muted" style="font-size:12px;margin-top:7px;line-height:1.5">Mayor relación impacto/costo sobre la disponibilidad.</p></div>
+      <div class="card" style="border-color:var(--crane)"><div class="fn">2 · Aplicar</div><div style="font-family:var(--disp);font-size:24px;font-weight:700;line-height:1">Tarifa diferencial</div><p class="muted" style="font-size:12px;margin-top:7px;line-height:1.5">Recargo ≈ C × 0,046 por medio-contenedor.</p></div>
+      <div class="card" style="border-color:var(--faint)"><div class="fn" style="color:var(--faint)">3 · Diferir</div><div style="font-family:var(--disp);font-size:24px;font-weight:700;line-height:1;color:var(--faint)">Segunda grúa</div><p class="muted" style="font-size:12px;margin-top:7px;line-height:1.5">Sólo si el turnaround tiene valor comercial.</p></div>
+    </div>
+    <p class="note"><b>En una línea:</b> el cuello de botella no es la capacidad sino la <b>disponibilidad</b> de la grúa. Mantenimiento + tarifa resuelven más, por menos, que una segunda grúa.</p>
+  </section>
+
+  <!-- 10 · EXPERIMENTACIÓN · VALIDACIÓN Y RIGOR -->
   <section class="slide" data-section="Validación y rigor">
     <div class="kicker">Experimentación · por qué confiar</div>
     <h2 class="head">Por qué confiar en el modelo</h2>
@@ -490,7 +490,32 @@ footer{
     <p class="note"><b>Criterio honesto:</b> no se descartan las colas largas de las exponenciales (no son outliers); el KS se usa como criterio comparativo entre candidatas, no como prueba formal.</p>
   </section>
 
-  <!-- CÓMO LO ARMAMOS · MOTOR (SIMULADOR) -->
+  <!-- 14 · GESTIÓN DEL CONOCIMIENTO · DIFICULTADES -->
+  <section class="slide" data-section="Dificultades y aprendizajes">
+    <div class="kicker">Gestión del conocimiento</div>
+    <h2 class="head">Dificultades y cómo las resolvimos</h2>
+    <div class="grid g2" style="margin-top:6px;align-items:start">
+      <div class="card">
+        <div class="fn">Reproducir el ~15% de indisponibilidad</div>
+        <p class="muted" style="font-size:12.5px;line-height:1.55">El ancla sólo cerraba haciendo avanzar el <b>reloj de fallas en minutos operativos</b> (sólo cuando la grúa mueve carga), no en calendario. Detalle fácil de pasar por alto y clave para la validez.</p>
+      </div>
+      <div class="card">
+        <div class="fn">Los datos refutaron supuestos</div>
+        <p class="muted" style="font-size:12.5px;line-height:1.55">El <i>input analysis</i> corrigió el modelo conceptual: el amarre <b>depende del tamaño</b>, el clima es un <b>proceso de eventos</b> (no Bernoulli por paso) y la duración de paros ajusta a <b>Uniforme</b>.</p>
+      </div>
+      <div class="card">
+        <div class="fn">Medir bien el sobrecosto del medio (VD2)</div>
+        <p class="muted" style="font-size:12.5px;line-height:1.55">La diferencia de <b>modas</b> sobreestimaba (~3,4 min). El valor correcto es la diferencia de <b>medias</b> (~2,8 min) — clave para no inflar la base tarifaria.</p>
+      </div>
+      <div class="card">
+        <div class="fn">Técnicas fuera del programa</div>
+        <p class="muted" style="font-size:12.5px;line-height:1.55">El <b>warm-up</b>, los <b class="cr">CRN</b> y el modelado de fallas como <b>proceso de Poisson</b> exigieron apoyarse en la bibliografía (Law; Banks).</p>
+      </div>
+    </div>
+    <p class="note"><b>Aprendizaje de mayor valor:</b> la simulación <b class="al">contradijo la intuición</b> — el limitante no era la capacidad sino la disponibilidad de la grúa. Validar contra las anclas conocidas fue lo que dio confianza para sostener esa conclusión.</p>
+  </section>
+
+  <!-- 15 · CÓMO LO ARMAMOS · MOTOR -->
   <section class="slide" data-section="Cómo lo armamos">
     <div class="kicker">Simulador · cómo lo armamos</div>
     <h2 class="head">El motor, en SimPy</h2>
@@ -529,31 +554,6 @@ footer{
       </div>
       <p class="note" style="text-align:left;display:inline-block;margin-top:30px">El botón abre <code>../Simulador/terminal_baires_sim.html</code> (ruta relativa, en pestaña nueva). Funciona igual en local y en GitHub Pages. Es la maqueta visual del modelo; los resultados presentados al inicio salen del análisis completo (notebook).</p>
     </div>
-  </section>
-
-  <!-- 15 · DIFICULTADES Y APRENDIZAJES -->
-  <section class="slide" data-section="Dificultades y aprendizajes">
-    <div class="kicker">Gestión del conocimiento</div>
-    <h2 class="head">Dificultades y cómo las resolvimos</h2>
-    <div class="grid g2" style="margin-top:6px;align-items:start">
-      <div class="card">
-        <div class="fn">Reproducir el ~15% de indisponibilidad</div>
-        <p class="muted" style="font-size:12.5px;line-height:1.55">El ancla sólo cerraba haciendo avanzar el <b>reloj de fallas en minutos operativos</b> (sólo cuando la grúa mueve carga), no en calendario. Detalle fácil de pasar por alto y clave para la validez.</p>
-      </div>
-      <div class="card">
-        <div class="fn">Los datos refutaron supuestos</div>
-        <p class="muted" style="font-size:12.5px;line-height:1.55">El <i>input analysis</i> corrigió el modelo conceptual: el amarre <b>depende del tamaño</b>, el clima es un <b>proceso de eventos</b> (no Bernoulli por paso) y la duración de paros ajusta a <b>Uniforme</b>.</p>
-      </div>
-      <div class="card">
-        <div class="fn">Medir bien el sobrecosto del medio (VD2)</div>
-        <p class="muted" style="font-size:12.5px;line-height:1.55">La diferencia de <b>modas</b> sobreestimaba (~3,4 min). El valor correcto es la diferencia de <b>medias</b> (~2,8 min) — clave para no inflar la base tarifaria.</p>
-      </div>
-      <div class="card">
-        <div class="fn">Técnicas fuera del programa</div>
-        <p class="muted" style="font-size:12.5px;line-height:1.55">El <b>warm-up</b>, los <b class="cr">CRN</b> y el modelado de fallas como <b>proceso de Poisson</b> exigieron apoyarse en la bibliografía (Law; Banks).</p>
-      </div>
-    </div>
-    <p class="note"><b>Aprendizaje de mayor valor:</b> la simulación <b class="al">contradijo la intuición</b> — el limitante no era la capacidad sino la disponibilidad de la grúa. Validar contra las anclas conocidas fue lo que dio confianza para sostener esa conclusión.</p>
   </section>
 
 </div>
