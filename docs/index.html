@@ -85,7 +85,7 @@ table.data .sc{font-weight:600}
 .pill{display:inline-block;padding:2px 8px;border:1px solid var(--line);border-radius:20px;font-size:11px;color:var(--muted)}
 /* ---------- código ---------- */
 code{font-family:var(--mono);color:var(--crane);background:var(--panel2);border:1px solid var(--line);border-radius:3px;padding:1px 5px;font-size:.9em}
-pre.code{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--crane);border-radius:6px;padding:12px 14px;font-family:var(--mono);font-size:12px;line-height:1.65;color:var(--ink);overflow:auto;white-space:pre}
+pre.code{background:var(--panel2);border:1px solid var(--line);border-left:4px solid var(--crane);border-radius:8px;padding:20px 26px;font-family:var(--mono);font-size:16.5px;line-height:1.95;color:var(--ink);overflow:auto;white-space:pre;box-shadow:0 14px 40px -22px #000}
 pre.code .c{color:var(--faint)} pre.code .k{color:var(--crane)} pre.code .s{color:var(--storm)}
 .fn{font-family:var(--mono);color:var(--crane);font-size:13px;font-weight:600;margin-bottom:5px}
 .fn span{color:var(--faint);font-weight:400}
@@ -279,7 +279,7 @@ footer{
       <div class="chip"><div class="v">~0</div><div class="l">congestión a 10/mes</div></div>
       <div class="chip"><div class="v">5×</div><div class="l">demanda sin congestionar (1 grúa)</div></div>
     </div>
-    <p class="note"><b>Conclusión:</b> la 2ª grúa no resuelve congestión (no la hay); reduce la <b>estadía</b> por paralelizar (<span class="dotc1">●</span> 1 grúa, <span class="dotc3">●</span> 2 grúas). Aun a 5× la demanda el puerto sigue holgado con una sola. Se justifica <b>sólo si el turnaround más rápido tiene valor comercial</b>, no como capacidad.</p>
+    <p class="note"><b>Conclusión:</b> la 2ª grúa no resuelve congestión (no la hay); reduce la <b>estadía</b> por paralelizar (<span class="dotc1">●</span> 1 grúa, <span class="dotc3">●</span> 2 grúas). Aun a 5× la demanda el puerto sigue holgado con una sola.</p>
   </section>
 
   <!-- BLOQUE 4 · EXPERIMENTACIÓN · VD2 -->
@@ -519,24 +519,25 @@ footer{
   <section class="slide" data-section="Cómo lo armamos">
     <div class="kicker">Simulador · cómo lo armamos</div>
     <h2 class="head">El motor, en SimPy</h2>
-    <p class="lead">Implementado en <b>Python + SimPy</b>. El núcleo (<code>crane_work</code>) sirve "minutos-grúa" y, en el mismo bucle, resuelve las pausas por clima y las interrupciones por falla.</p>
-    <div class="grid g2" style="margin-top:14px;align-items:start">
-      <pre class="code"><span class="c"># crane_work — sirve la carga de una grúa</span>
-<span class="k">while</span> queda_trabajo:
-    <span class="k">while</span> not clima_ok:          <span class="c"># ⛈ pausa</span>
-        <span class="k">yield</span> clima_despejado
+    <p class="lead">El puerto vive dentro de un <b>motor de simulación</b> en Python (SimPy) que lo reproduce minuto a minuto. Su corazón decide, en un mismo bucle, cómo trabaja la grúa y cómo la frenan el <b style="color:var(--storm)">clima</b> y las <b class="cr">fallas</b>:</p>
+    <pre class="code"><span class="c"># crane_work — la grúa sirve la carga de un barco, minuto a minuto</span>
+<span class="k">while</span> queda_trabajo:                <span class="c"># mientras quede carga por mover</span>
+    <span class="k">while</span> not clima_ok:             <span class="c"># ⛈ si hay clima adverso, todo se frena</span>
+        <span class="k">yield</span> clima_despejado       <span class="c">#    espera a que despeje</span>
+    <span class="c"># avanza hasta lo que pase primero: terminar el trabajo,</span>
+    <span class="c"># agotar el tiempo-hasta-falla (ttf), o que entre el clima</span>
     <span class="k">yield</span> timeout(trabajo) | timeout(ttf) | clima_corte
-    <span class="k">if</span> ttf &lt;= 0:                 <span class="c"># ⚠ falla (min op.)</span>
-        <span class="k">yield</span> timeout(MTTR())      <span class="c"># reparación</span>
-        ttf = MTBF()              <span class="c"># próxima falla</span></pre>
-      <div style="display:flex;flex-direction:column;gap:9px">
-        <div class="card" style="padding:11px 13px"><div class="fn">Streams(seed)</div><p class="muted" style="font-size:12px;line-height:1.45">5 RNG independientes (arr · ship · svc · fail · wx) → habilita <b class="cr">CRN</b>.</p></div>
-        <div class="card" style="padding:11px 13px"><div class="fn">weather_proc</div><p class="muted" style="font-size:12px;line-height:1.45">Clima como eventos: Exp(gap) + Uniforme(duración). Suspende toda la operación.</p></div>
-        <div class="card" style="padding:11px 13px"><div class="fn">ship_proc</div><p class="muted" style="font-size:12px;line-height:1.45">Muelle cap.1 FCFS → amarre → grúas round-robin → desamarre.</p></div>
-        <div class="card" style="padding:11px 13px"><div class="fn">run_one</div><p class="muted" style="font-size:12px;line-height:1.45">12 meses + 1 de warm-up (snapshot) → devuelve VR1…VR6.</p></div>
-      </div>
+    <span class="k">if</span> ttf &lt;= 0:                    <span class="c"># ⚠ se acabó el ttf → la grúa se rompió</span>
+        <span class="k">yield</span> timeout(MTTR())       <span class="c"># 🔧 fuera de servicio: reparación (MTTR)</span>
+        ttf = MTBF()                <span class="c"># programa la próxima falla (MTBF)</span></pre>
+    <p class="cap" style="text-align:left;margin-top:10px">Las mismas reglas que vimos en el diagrama de proceso, ahora ejecutándose. La grúa avanza salvo que el clima o una rotura la detengan — exactamente como en el muelle real.</p>
+    <div class="grid g4" style="margin-top:16px">
+      <div class="card" style="padding:12px 14px"><div class="fn">Azar reproducible <span>· Streams</span></div><p class="muted" style="font-size:12.5px;line-height:1.5">Cada fuente de incertidumbre (llegadas, clima, fallas) tiene su propia "semilla": la misma corrida da siempre el mismo resultado.</p></div>
+      <div class="card" style="padding:12px 14px"><div class="fn">El clima <span>· weather_proc</span></div><p class="muted" style="font-size:12.5px;line-height:1.5">Aparece y se va como en la realidad, y mientras dura suspende toda la operación del puerto.</p></div>
+      <div class="card" style="padding:12px 14px"><div class="fn">El recorrido del barco <span>· ship_proc</span></div><p class="muted" style="font-size:12.5px;line-height:1.5">Espera el muelle, amarra, lo trabaja la grúa y desamarra — igual que en el diagrama de proceso.</p></div>
+      <div class="card" style="padding:12px 14px"><div class="fn">Una corrida completa <span>· run_one</span></div><p class="muted" style="font-size:12.5px;line-height:1.5">Simula 12 meses (más 1 de ajuste) y entrega los 6 indicadores de gestión.</p></div>
     </div>
-    <p class="note">Nada de <code>random</code> global: todo sale de los <code>Streams</code> sembrados → <b>reproducible</b> (misma semilla → mismo resultado) y habilita las comparaciones pareadas por CRN.</p>
+    <p class="note"><b>Por qué importa para la decisión:</b> al fijar el azar, comparamos los escenarios <b>en igualdad de condiciones</b> — la diferencia que se ve es por la <b>política</b> (segunda grúa, mantenimiento, tarifa), no por la suerte. Y cualquiera puede volver a correr el modelo y obtener exactamente lo mismo.</p>
   </section>
 
   <!-- SIMULADOR · VISTAS DEL SIMULADOR (DEMO EN VIVO) -->
@@ -552,7 +553,6 @@ footer{
         <a id="repo-link" href="#"><b>GitHub</b>repositorio del proyecto</a>
         <a href="#" id="back-link"><b>↺</b>volver a la portada</a>
       </div>
-      <p class="note" style="text-align:left;display:inline-block;margin-top:30px">El botón abre <code>../Simulador/terminal_baires_sim.html</code> (ruta relativa, en pestaña nueva). Funciona igual en local y en GitHub Pages. Es la maqueta visual del modelo; los resultados presentados al inicio salen del análisis completo (notebook).</p>
     </div>
   </section>
 
